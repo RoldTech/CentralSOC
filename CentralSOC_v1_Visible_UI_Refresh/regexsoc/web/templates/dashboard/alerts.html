@@ -1,0 +1,81 @@
+{% extends "app_base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Alerts - CentralSOC{% endblock %}
+{% block content %}
+<div class="workspace-heading"><div><h1>Alert Triage</h1><p class="dim">Review detections, inspect supporting evidence, and prioritize investigation.</p></div><a class="btn" href="{{ url_for('dashboard.overview') }}">SOC overview</a></div>
+<p class="page-sub">{{ total }} alert{{ 's' if total != 1 }} matching these filters.</p>
+
+<div class="triage-metrics" aria-label="Summary of all matching alerts">
+{% for label, value, icon, tone, detail in [('New Alerts', summary[0], '!', 'red', 'Ready for triage'), ('Assigned to Me', summary[1], '◎', 'blue', 'Your matching alerts'), ('High Risk', summary[2], '▲', 'orange', 'Risk score 80 or higher'), ('Awaiting Verdict', summary[3], '◷', 'purple', 'No analyst verdict recorded')] %}
+<div class="triage-metric {{ tone }}"><span class="metric-icon" aria-hidden="true">{{ icon }}</span><div><span>{{ label }}</span><strong>{{ value }}</strong><small>{{ detail }}</small></div></div>
+{% endfor %}
+</div><p class="dim metric-scope">Counts reflect all alerts matching the current filters, across every page.</p>
+<div class="queue-export"><a class="btn btn-primary" href="{{ url_for('dashboard.alerts_queue_export', **qargs) }}">Download filtered alerts (CSV)</a><span class="dim">Up to 1,000 matching alerts. Includes verdicts and owners; handle as internal SOC information.</span></div>
+<section class="panel queue-filter-panel" aria-label="Alert filters"><h2>Filters</h2><p class="dim">Refine alerts to find and prioritize what matters.</p>
+<form class="filter-bar" method="get">
+  <div class="filter-field"><label for="f-severity">Severity</label>
+    <select id="f-severity" name="severity">
+      <option value="">Any</option>
+      {% for s in ("CRITICAL","HIGH","MEDIUM","LOW") %}
+      <option value="{{ s }}" {{ 'selected' if filters.severity == s }}>{{ s }}</option>
+      {% endfor %}
+    </select></div>
+  <div class="filter-field"><label for="f-status">Status</label>
+    <select id="f-status" name="status">
+      <option value="">Any</option>
+      {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if filters.status == s }}>{{ s }}</option>{% endfor %}
+    </select></div>
+  <div class="filter-field"><label for="f-ip">Source IP</label>
+    <input type="text" id="f-ip" name="source_ip" value="{{ filters.source_ip }}" placeholder="Filter by source IP"></div>
+  <div class="filter-field"><label for="f-user">Account / username</label>
+    <input type="text" id="f-user" name="username" maxlength="255" value="{{ filters.username }}" placeholder="Account name"></div>
+  <div class="filter-field"><label for="f-rule">Detection</label>
+    <select id="f-rule" name="rule_id">
+      <option value="">Any</option>
+      {% for rule_id, rule_name in detections %}
+      <option value="{{ rule_id }}" {{ 'selected' if filters.rule_id == rule_id }}>{{ rule_name }}</option>
+      {% endfor %}
+    </select></div>
+  {{ m.time_range_select(time_range_labels, filters.time_range) }}
+  <div class="filter-field"><label for="f-owner">Ownership</label>
+    <select id="f-owner" name="ownership">
+      <option value="">All alerts</option>
+      <option value="mine" {{ "selected" if filters.ownership == "mine" }}>Assigned to me</option>
+      <option value="unassigned" {{ "selected" if filters.ownership == "unassigned" }}>Unassigned</option>
+    </select></div>
+  <div class="filter-field"><label for="f-sort">Sort alerts</label>
+    <select id="f-sort" name="sort">
+      <option value="risk" {{ 'selected' if filters.sort == 'risk' }}>Highest risk first</option>
+      <option value="newest" {{ 'selected' if filters.sort == 'newest' }}>Newest first</option>
+      <option value="oldest" {{ 'selected' if filters.sort == 'oldest' }}>Oldest first</option>
+    </select></div>
+  <button type="submit" class="btn btn-primary">Apply filters</button>
+  {% if filters.severity or filters.status or filters.source_ip or filters.username or filters.rule_id or filters.ownership or filters.sort != "risk" or filters.time_range != "" %}
+  <a class="btn" href="{{ url_for('dashboard.alerts_list') }}">Clear</a>{% endif %}
+</form></section>
+
+{% if alerts %}
+<div class="table-wrap"><table>
+  <caption class="visually-hidden">Security alerts matching selected filters</caption>
+  <thead><tr><th>Severity</th><th class="score-column">Risk Score</th><th>Detection rule</th><th>Source IP</th><th>Username</th><th>Owner</th><th>Status</th><th>Time</th><th>Actions</th></tr></thead>
+  <tbody>
+    {% for a in alerts %}
+    <tr>
+      <td>{{ m.severity_badge(a.severity) }}</td>
+      <td class="score-column"><span class="score-chip">{{ a.risk_score }}</span></td>
+      <td><a href="{{ url_for('dashboard.alert_detail', alert_pk=a.id) }}">{{ a.rule_name }}</a></td>
+      <td class="mono">{{ a.source_ip or '—' }}</td>
+      <td>{{ a.username or '—' }}</td>
+      <td>{{ a.assigned_to or 'Unassigned' }}</td>
+      <td>{{ m.status_pill(a.status) }}</td>
+      <td class="mono">{{ a.timestamp.strftime('%Y-%m-%d %H:%M') if a.timestamp else '—' }}</td>
+      <td><a class="btn" href="{{ url_for('dashboard.alert_detail', alert_pk=a.id) }}">Investigate</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table></div>
+{{ m.pagination(page, page_size, total, 'dashboard.alerts_list', qargs) }}
+{% else %}
+<div class="panel empty-state"><h2>No alerts in this view</h2><p>No alerts match the current selection. Try clearing filters or review a different time window.</p><a class="btn" href="{{ url_for('dashboard.alerts_list') }}">Clear filters</a></div>
+{% endif %}
+{% endblock %}

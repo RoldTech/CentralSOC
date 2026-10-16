@@ -1,0 +1,45 @@
+{% extends "app_base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Rules - CentralSOC{% endblock %}
+{% block content %}
+<h1>Detection rules</h1>
+<p class="page-sub">{{ rules|length }} rule{{ 's' if rules|length != 1 }} shown.</p>
+
+<form class="filter-bar" method="get">
+  <div class="filter-field"><label for="f-cat">Category</label>
+    <select id="f-cat" name="category">
+      <option value="">Any</option>
+      {% for c in categories %}<option value="{{ c }}" {{ 'selected' if selected_category == c }}>{{ c }}</option>{% endfor %}
+    </select></div>
+  <div class="filter-field"><label for="f-q">Name or ID</label>
+    <input type="text" id="f-q" name="q" value="{{ search_term }}" placeholder="brute force, RULE-002..."></div>
+  <button type="submit" class="btn btn-primary">Apply filters</button>
+  {% if selected_category or search_term %}<a class="btn" href="{{ url_for('dashboard.rules_list') }}">Clear</a>{% endif %}
+</form>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Severity</th><th class="num">Score</th><th>State</th>{% if can_manage_rules %}<th></th>{% endif %}</tr></thead>
+  <tbody>
+    {% for r in rules %}
+    <tr>
+      <td class="mono">{{ r.id }}</td>
+      <td>{{ r.name }}</td>
+      <td>{{ r.category }}</td>
+      <td>{{ m.severity_badge(r.severity) }}</td>
+      <td class="num">{{ r.risk_score }}</td>
+      <td>{{ 'Enabled' if r.enabled else 'Disabled' }}</td>
+      {% if can_manage_rules %}
+      <td>
+        <form method="post" action="{{ url_for('dashboard.rule_toggle', rule_id=r.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="enabled" value="{{ '0' if r.enabled else '1' }}">
+          <button type="submit" class="btn">{{ 'Disable' if r.enabled else 'Enable' }}</button>
+        </form>
+      </td>
+      {% endif %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table></div>
+<p class="dim mb-tight">Full documentation for every rule is generated at <code>docs/detection-rules.md</code>.</p>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% macro severity_badge(sev) -%}
+<span class="badge badge-{{ sev|lower }}">{{ sev }}</span>
+{%- endmacro %}
+
+{% macro risk_badge(risk) -%}
+<span class="badge badge-{{ risk|lower }}">{{ risk }}</span>
+{%- endmacro %}
+
+{% macro classification_badge(classification) -%}
+<span class="badge badge-class-{{ classification|lower }}">{{ classification }}</span>
+{%- endmacro %}
+
+{% macro status_pill(status) -%}
+<span class="status-pill status-{{ status|lower|replace(' ', '-') }}">{{ status }}</span>
+{%- endmacro %}
+
+{% macro nav_item(endpoint, key, active, icon, label) -%}
+<a class="nav-item {{ 'active' if active == key }}" href="{{ url_for(endpoint) }}">
+  <span class="nav-icon" aria-hidden="true">{{ icon|safe }}</span>{{ label }}</a>
+{%- endmacro %}
+
+{% macro pagination(page, page_size, total, endpoint, args) -%}
+{% set has_next = (page * page_size) < total %}
+<div class="pagination">
+  <span>{{ ((page - 1) * page_size) + 1 }}&ndash;{{ [page * page_size, total]|min }} of {{ total }}</span>
+  {% if page > 1 %}<a class="btn" href="{{ url_for(endpoint, **(args|combine_page(page - 1))) }}">Previous</a>{% endif %}
+  {% if has_next %}<a class="btn" href="{{ url_for(endpoint, **(args|combine_page(page + 1))) }}">Next</a>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro bar_row(label, count, max_count) -%}
+{% set pct = ((100 * count / max_count) / 5)|round(0, 'common') * 5 if max_count else 0 %}
+<div class="bar-row">
+  <div class="bar-label" title="{{ label }}">{{ label }}</div>
+  <div class="bar-track"><div class="bar-fill w-{{ pct|int }}"></div></div>
+  <div class="bar-count">{{ count }}</div>
+</div>
+{%- endmacro %}
+
+{% macro time_range_select(labels, current) -%}
+<div class="filter-field"><label for="f-range">Time range</label>
+  <select id="f-range" name="time_range">
+    {% for key, label in labels %}
+    <option value="{{ key }}" {{ 'selected' if current == key }}>{{ label }}</option>
+    {% endfor %}
+  </select>
+</div>
+{%- endmacro %}

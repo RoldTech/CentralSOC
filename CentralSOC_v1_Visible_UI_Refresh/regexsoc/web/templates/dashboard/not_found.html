@@ -1,0 +1,7 @@
+{% extends "app_base.html" %}
+{% block title %}Not found - CentralSOC{% endblock %}
+{% block content %}
+<h1>{{ kind|capitalize }} not found</h1>
+<p class="page-sub">This {{ kind }} does not exist, or has been removed. Check the link or search again.</p>
+<a class="btn" href="{{ url_for('dashboard.overview') }}">Back to overview</a>
+{% endblock %}

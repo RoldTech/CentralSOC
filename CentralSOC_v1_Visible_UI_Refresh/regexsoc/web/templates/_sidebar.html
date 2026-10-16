@@ -1,0 +1,18 @@
+{% import "macros.html" as m %}
+<nav class="sidebar" aria-label="Main navigation">
+  <div class="brand">Central<span class="accent-text">SOC</span></div>
+  <div class="nav-group">
+    {{ m.nav_item('dashboard.overview', 'overview', active, '&#9673;', 'Dashboard') }}
+    {{ m.nav_item('dashboard.alerts_list', 'alerts', active, '&#9888;', 'Alert Triage') }}
+    {{ m.nav_item('dashboard.security_memory', 'memory', active, '&#9678;', 'Security Memory') }}
+    {% if can_view_incidents %}{{ m.nav_item('incidents.list_incidents', 'incidents', active, '&#9878;', 'Incidents') }}{% endif %}
+    {{ m.nav_item('dashboard.detections_list', 'detections', active, '&#9673;', 'Detections') }}
+    {{ m.nav_item('dashboard.events_list', 'events', active, '&#9776;', 'Events') }}
+    {{ m.nav_item('dashboard.iocs_list', 'iocs', active, '&#9737;', 'IOCs') }}
+    {% if can_upload_logs %}{{ m.nav_item('dashboard.log_analysis_form', 'log_analysis', active, '&#9906;', 'Log Analysis') }}{% endif %}
+    {% if can_upload_logs %}{{ m.nav_item('email_security.analyze', 'email_security', active, '&#9993;', 'Email Security') }}{% endif %}
+    {{ m.nav_item('dashboard.reports_page', 'reports', active, '&#9639;', 'Reports') }}
+    {% if can_view_rules %}{{ m.nav_item('dashboard.rules_list', 'rules', active, '&#9881;', 'Rules') }}{% endif %}
+    {{ m.nav_item('dashboard.settings_page', 'settings', active, '&#9881;', 'Settings') }}
+  </div>
+</nav>

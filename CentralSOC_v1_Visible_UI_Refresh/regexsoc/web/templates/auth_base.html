@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="auth-shell">
+  <div class="auth-card">
+    {% for message in get_flashed_messages() %}<div class="flash">{{ message }}</div>{% endfor %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

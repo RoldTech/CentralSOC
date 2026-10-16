@@ -1,0 +1,48 @@
+{% extends "app_base.html" %}
+{% block title %}Settings - CentralSOC{% endblock %}
+{% block content %}
+<h1>Settings</h1>
+
+<div class="panel">
+  <div class="panel-title"><h2>Account</h2></div>
+  <div class="detail-grid">
+    <div class="field"><div class="k">Username</div><div class="v">{{ g.current_user.username }}</div></div>
+    <div class="field"><div class="k">Role</div><div class="v">{{ g.current_user.role }}</div></div>
+    <div class="field"><div class="k">Last sign-in</div><div class="v mono">{{ g.current_user.last_login_at.strftime('%Y-%m-%d %H:%M UTC') if g.current_user.last_login_at else '—' }}</div></div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title"><h2>Security</h2></div>
+  <p class="mb-tight">Change your password. This signs out only after you next sign in with the new one.</p>
+  <form method="post" action="{{ url_for('dashboard.settings_change_password') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label for="current-password">Current password</label>
+    <input type="password" id="current-password" name="current_password" autocomplete="current-password" required>
+    <label for="new-password">New password</label>
+    <input type="password" id="new-password" name="new_password" autocomplete="new-password" required minlength="12">
+    <button type="submit" class="btn btn-primary mt-12">Change password</button>
+  </form>
+
+  <hr class="hr">
+  <p class="mb-tight">Two-factor authentication: <strong>{{ 'Enabled' if g.current_user.mfa_enabled else 'Not enabled' }}</strong></p>
+  {% if g.current_user.mfa_enabled %}
+  <form method="post" action="{{ url_for('dashboard.settings_disable_mfa') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button type="submit" class="btn">Disable two-factor authentication</button>
+  </form>
+  {% else %}
+  <a class="btn btn-primary" href="{{ url_for('auth.mfa_setup_form') }}">Set up two-factor authentication</a>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <div class="panel-title"><h2>Detection settings</h2></div>
+  <p class="dim mb-tight">Rules are managed on the <a href="{{ url_for('dashboard.rules_list') }}">Rules page</a>{{ '' if can_manage_rules else ' (view-only for your role)' }}.</p>
+</div>
+
+<div class="panel">
+  <div class="panel-title"><h2>Session</h2></div>
+  <p class="dim">Your session refreshes on activity and expires after {{ session_minutes }} minutes of inactivity.</p>
+</div>
+{% endblock %}

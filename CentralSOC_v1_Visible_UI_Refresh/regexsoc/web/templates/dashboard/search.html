@@ -1,0 +1,69 @@
+{% extends "app_base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Search - CentralSOC{% endblock %}
+{% block content %}
+<h1>Search</h1>
+{% if not query %}
+<p class="page-sub">Enter a source IP, alert ID, hash, domain, username or rule name in the search box above.</p>
+{% elif results.total == 0 %}
+<p class="page-sub">No alerts, events or IOCs matched &ldquo;{{ query }}&rdquo;. Try a broader term, or check the source IP, hash or alert ID is exact.</p>
+{% else %}
+<p class="page-sub">Results for &ldquo;{{ query }}&rdquo; ({{ kind|replace('_', ' ') }} match).</p>
+
+{% if results.alerts %}
+<div class="panel search-section">
+  <h2>Alerts</h2>
+  <div class="count">{{ results.alert_total }} match{{ 'es' if results.alert_total != 1 }}{% if results.alert_total > results.alerts|length %}, showing the first {{ results.alerts|length }}{% endif %}</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Severity</th><th>Rule</th><th>Source IP</th><th>Username</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for a in results.alerts %}
+      <tr>
+        <td>{{ m.severity_badge(a.severity) }}</td>
+        <td><a href="{{ url_for('dashboard.alert_detail', alert_pk=a.id) }}">{{ a.rule_name }}</a></td>
+        <td class="mono">{{ a.source_ip or '—' }}</td>
+        <td>{{ a.username or '—' }}</td>
+        <td>{{ m.status_pill(a.status) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if results.events %}
+<div class="panel search-section">
+  <h2>Events</h2>
+  <div class="count">{{ results.event_total }} match{{ 'es' if results.event_total != 1 }}{% if results.event_total > results.events|length %}, showing the first {{ results.events|length }}{% endif %}</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Type</th><th>Source IP</th><th>Username</th><th>Time</th></tr></thead>
+    <tbody>
+      {% for e in results.events %}
+      <tr>
+        <td><a href="{{ url_for('dashboard.event_detail', event_id=e.id) }}">{{ e.event_type }}</a></td>
+        <td class="mono">{{ e.source_ip or '—' }}</td>
+        <td>{{ e.username or '—' }}</td>
+        <td class="mono">{{ e.timestamp.strftime('%Y-%m-%d %H:%M') if e.timestamp else '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if results.iocs %}
+<div class="panel search-section">
+  <h2>IOCs</h2>
+  <div class="count">{{ results.ioc_total }} match{{ 'es' if results.ioc_total != 1 }}{% if results.ioc_total > results.iocs|length %}, showing the first {{ results.iocs|length }}{% endif %}</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Type</th><th>Value</th></tr></thead>
+    <tbody>
+      {% for i in results.iocs %}
+      <tr><td>{{ i.ioc_type }}</td><td class="mono"><a href="{{ url_for('dashboard.ioc_detail', ioc_type=i.ioc_type, value=i.value) }}">{{ i.value }}</a></td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

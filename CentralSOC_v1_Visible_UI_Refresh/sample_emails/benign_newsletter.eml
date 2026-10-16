@@ -1,0 +1,17 @@
+From: "Example Corp Newsletter" <news@example.com>
+To: alice@example.org
+Subject: Your weekly digest
+Date: Sun, 10 Mar 2024 09:00:00 +0000
+Message-ID: <digest-2024-03-10@example.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Received: from mail.example.com (mail.example.com [203.0.113.10])
+	by mx.example.org with ESMTPS id abc123
+	for <alice@example.org>; Sun, 10 Mar 2024 09:00:01 +0000
+Received-SPF: pass (example.org: domain of news@example.com designates 203.0.113.10 as permitted sender)
+Authentication-Results: mx.example.org; spf=pass smtp.mailfrom=news@example.com; dkim=pass header.d=example.com; dmarc=pass header.from=example.com
+DKIM-Signature: v=1; a=rsa-sha256; d=example.com; s=selector1; c=relaxed/relaxed; h=from:to:subject:date; bh=abc123=; b=def456=
+
+Here is this week's roundup from Example Corp. Nothing urgent, just news.
+
+Unsubscribe any time at https://example.com/unsubscribe

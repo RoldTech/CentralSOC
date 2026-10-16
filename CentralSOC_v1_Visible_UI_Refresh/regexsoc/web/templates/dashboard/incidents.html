@@ -1,0 +1,19 @@
+{% extends "app_base.html" %}
+{% block title %}Incidents — CentralSOC{% endblock %}
+{% block content %}
+{% if can_view_incidents %}<p><a class="btn" href="{{ url_for('incidents.export_incidents') }}">Export up to 1,000 incidents (CSV)</a></p>{% endif %}
+<h1>Incident workspace</h1><p class="page-sub">Track investigations and response decisions.</p>
+{% if can_manage_incidents %}<div class="panel incident-create"><h2>New incident</h2>
+<form class="incident-create-form" method="post" action="{{ url_for('incidents.create') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<label for="title">Title</label><input id="title" name="title" required maxlength="200">
+<label for="description">Description</label><textarea id="description" name="description" maxlength="4000"></textarea>
+<label for="severity">Severity</label><select id="severity" name="severity">{% for level in ['LOW','MEDIUM','HIGH','CRITICAL'] %}<option>{{ level }}</option>{% endfor %}</select>
+<button class="btn btn-primary" type="submit">Create incident</button></form></div>{% endif %}
+<div class="panel"><div class="panel-title"><h2>Incident queue ({{ total }})</h2><span class="dim">Cases requiring review and follow-up</span></div>
+<form class="incident-filter-form" method="get"><label for="status-filter">Status</label><select id="status-filter" name="status"><option value="">All</option>{% for status in statuses %}<option value="{{ status }}" {% if selected_status == status %}selected{% endif %}>{{ status }}</option>{% endfor %}</select><button class="btn btn-primary" type="submit">Filter</button></form>
+{% if incidents %}<div class="table-wrap"><table><caption class="visually-hidden">Incident cases</caption><thead><tr><th>Case</th><th>Severity</th><th>Status</th><th>Owner</th><th>Updated (UTC)</th></tr></thead><tbody>
+{% for incident in incidents %}<tr><td><a href="{{ url_for('incidents.detail', incident_id=incident.id) }}">#{{ incident.id }} — {{ incident.title }}</a></td><td><span class="badge badge-{{ incident.severity|lower }}">{{ incident.severity }}</span></td><td><span class="status-pill status-{{ incident.status|lower|replace(' ', '-') }}">{{ incident.status }}</span></td><td>{{ incident.owner or 'Unassigned' }}</td><td>{{ incident.updated_at }}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<p>No incidents found.</p>{% endif %}
+{% if page > 1 %}<a href="{{ url_for('incidents.list_incidents', page=page-1, status=selected_status) }}">Previous</a>{% endif %} {% if total > page*25 %}<a href="{{ url_for('incidents.list_incidents', page=page+1, status=selected_status) }}">Next</a>{% endif %}</div>
+{% endblock %}

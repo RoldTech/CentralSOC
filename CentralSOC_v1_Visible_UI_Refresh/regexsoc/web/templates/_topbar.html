@@ -1,0 +1,29 @@
+<div class="topbar">
+  <button class="sidebar-toggle" data-sidebar-toggle aria-expanded="false" aria-label="Toggle navigation">&#9776;</button>
+  <div class="header-titles">
+    <h1 class="header-title">{{ header_title or {'overview': 'Dashboard', 'alerts_list': 'Alert Triage', 'alert_detail': 'Alert Investigation', 'incidents_list': 'Incident Workspace', 'incident_detail': 'Incident Detail', 'events_list': 'Events', 'event_detail': 'Event Details', 'detections_list': 'Detections', 'iocs_list': 'Indicators of Compromise', 'log_analysis': 'Log Analysis', 'email_security': 'Email Security', 'reports': 'Reports', 'rules_list': 'Detection Rules', 'settings_page': 'Settings'}.get(request.endpoint.split('.')[-1] if request.endpoint else '', 'CentralSOC') }}</h1>
+    <p class="header-sub">Security Operations Center</p>
+  </div>
+  <form class="search-form" method="get" action="{{ url_for('dashboard.search_results') }}" role="search">
+    <label class="visually-hidden" for="global-search">Search</label>
+    <input type="text" id="global-search" name="q" placeholder="Search IP, alert ID, hash, domain, username..."
+           value="{{ request.args.get('q', '') }}">
+  </form>
+  <div class="topbar-right">
+    <a class="bell" href="{{ url_for('dashboard.alerts_list', status='New') }}" aria-label="{{ new_alert_count or 0 }} new alerts">
+      &#128276;{% if new_alert_count %}<span class="bell-badge">{{ new_alert_count if new_alert_count < 100 else '99+' }}</span>{% endif %}
+    </a>
+    <div class="user-menu">
+      <button type="button" class="user-menu-btn" data-user-menu-toggle aria-haspopup="true" aria-expanded="false">
+        {{ g.current_user.username }} <span class="role-tag">{{ g.current_user.role }}</span> &#9662;
+      </button>
+      <div class="user-menu-panel" data-user-menu-panel hidden>
+        <a href="{{ url_for('dashboard.settings_page') }}">Settings</a>
+        <form method="post" action="{{ url_for('auth.logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" class="user-menu-signout">Sign out</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,7 @@
+Mar 10 08:01:00 db01 sshd[811]: Accepted publickey for postgres from 192.0.2.30 port 51000 ssh2
+Mar 10 08:02:00 db01 sudo:   alice : TTY=pts/0 ; PWD=/home/alice ; USER=root ; COMMAND=/usr/bin/apt update
+Mar 10 08:03:00 db01 sshd[812]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=203.0.113.77  user=root
+Mar 10 08:03:00 db01 sshd[812]: Failed password for root from 203.0.113.77 port 60001 ssh2
+Mar 10 08:04:00 db01 sshd[813]: Invalid user guest from 203.0.113.77 port 60002
+Mar 10 08:05:00 db01 CRON[900]: pam_unix(cron:session): session opened for user root by (uid=0)
+Mar 10 08:06:00 db01 sudo:   bob : TTY=pts/1 ; PWD=/tmp ; USER=root ; COMMAND=/bin/cat /etc/shadow

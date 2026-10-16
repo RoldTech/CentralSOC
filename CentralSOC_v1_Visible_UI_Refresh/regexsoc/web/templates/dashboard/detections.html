@@ -1,0 +1,33 @@
+{% extends "app_base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Detections - CentralSOC{% endblock %}
+{% block content %}
+<h1>Detections</h1>
+<p class="page-sub">Every rule that has matched at least once, ranked by how often it fired. This counts every match, not just the ones that crossed the alert threshold &mdash; see <a href="{{ url_for('dashboard.alerts_list') }}">Alerts</a> for the triage queue.</p>
+
+<form class="filter-bar" method="get">
+  {{ m.time_range_select(time_range_labels, filters.time_range) }}
+  <button type="submit" class="btn btn-primary">Apply</button>
+</form>
+
+{% if detections %}
+<div class="table-wrap"><table>
+  <thead><tr><th scope="col">Detection</th><th scope="col">Category</th><th scope="col">Severity</th>
+    <th scope="col" class="num">Matches</th><th scope="col">State</th></tr></thead>
+  <tbody>
+    {% for d in detections %}
+    <tr>
+      <td><a href="{{ url_for('dashboard.detection_detail', rule_id=d.rule_id) }}">{{ d.rule_name }}</a>
+        <div class="dim mono text-xs">{{ d.rule_id }}</div></td>
+      <td>{{ d.category }}</td>
+      <td>{{ m.severity_badge(d.severity) }}</td>
+      <td class="num">{{ d.matches }}</td>
+      <td>{{ 'Enabled' if d.enabled else 'Disabled' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+<div class="empty-state">No detections yet in this time range. Ingest a log, or widen the time range.</div>
+{% endif %}
+{% endblock %}

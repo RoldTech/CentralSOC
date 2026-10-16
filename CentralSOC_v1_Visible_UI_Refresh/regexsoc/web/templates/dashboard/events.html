@@ -1,0 +1,53 @@
+{% extends "app_base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Events - CentralSOC{% endblock %}
+{% block content %}
+<h1>Events</h1>
+<p class="page-sub">{{ total }} event{{ 's' if total != 1 }} matching these filters.</p>
+
+<form class="filter-bar" method="get">
+  <div class="filter-field"><label for="f-severity">Severity</label>
+    <select id="f-severity" name="severity">
+      <option value="">Any</option>
+      {% for s in ("CRITICAL","HIGH","MEDIUM","LOW") %}
+      <option value="{{ s }}" {{ 'selected' if filters.severity == s }}>{{ s }}</option>
+      {% endfor %}
+    </select></div>
+  <div class="filter-field"><label for="f-type">Event type</label>
+    <select id="f-type" name="event_type">
+      <option value="">Any</option>
+      {% for t in event_types %}<option value="{{ t }}" {{ 'selected' if filters.event_type == t }}>{{ t }}</option>{% endfor %}
+    </select></div>
+  <div class="filter-field"><label for="f-ip">Source IP</label>
+    <input type="text" id="f-ip" name="source_ip" value="{{ filters.source_ip }}" placeholder="Filter by source IP"></div>
+  <div class="filter-field"><label for="f-dip">Destination IP</label>
+    <input type="text" id="f-dip" name="destination_ip" value="{{ filters.destination_ip }}" placeholder="Filter by destination IP"></div>
+  <div class="filter-field"><label for="f-user">Username</label>
+    <input type="text" id="f-user" name="username" value="{{ filters.username }}" placeholder="root"></div>
+  {{ m.time_range_select(time_range_labels, filters.time_range) }}
+  <button type="submit" class="btn btn-primary">Apply filters</button>
+  {% if filters.severity or filters.event_type or filters.source_ip or filters.destination_ip or filters.username or filters.time_range %}
+  <a class="btn" href="{{ url_for('dashboard.events_list') }}">Clear</a>{% endif %}
+</form>
+
+{% if events %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Severity</th><th>Type</th><th>Source IP</th><th>Username</th><th>Path / detail</th><th>Time</th></tr></thead>
+  <tbody>
+    {% for e in events %}
+    <tr>
+      <td>{{ m.severity_badge(e.severity) }}</td>
+      <td><a href="{{ url_for('dashboard.event_detail', event_id=e.id) }}">{{ e.event_type }}</a></td>
+      <td class="mono">{{ e.source_ip or '—' }}</td>
+      <td>{{ e.username or '—' }}</td>
+      <td class="mono">{{ (e.http_path or e.raw_log)[:60] }}</td>
+      <td class="mono">{{ e.timestamp.strftime('%Y-%m-%d %H:%M:%S') if e.timestamp else '—' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table></div>
+{{ m.pagination(page, page_size, total, 'dashboard.events_list', qargs) }}
+{% else %}
+<div class="empty-state">No events match these filters. Try clearing a filter, or ingest a log if none has been analyzed yet.</div>
+{% endif %}
+{% endblock %}

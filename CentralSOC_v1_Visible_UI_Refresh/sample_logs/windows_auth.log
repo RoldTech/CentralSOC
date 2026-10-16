@@ -1,0 +1,19 @@
+2024-03-10T11:00:10Z DC01 Microsoft-Windows-Security-Auditing EventID=4625 TargetUserName=administrator IpAddress=203.0.113.120 IpPort=49000 LogonType=10 Status=0xC000006D
+2024-03-10T11:00:20Z DC01 Microsoft-Windows-Security-Auditing EventID=4625 TargetUserName=administrator IpAddress=203.0.113.120 IpPort=49001 LogonType=10 Status=0xC000006D
+2024-03-10T11:00:30Z DC01 Microsoft-Windows-Security-Auditing EventID=4625 TargetUserName=administrator IpAddress=203.0.113.120 IpPort=49002 LogonType=10 Status=0xC000006D
+2024-03-10T11:00:40Z DC01 Microsoft-Windows-Security-Auditing EventID=4625 TargetUserName=administrator IpAddress=203.0.113.120 IpPort=49003 LogonType=10 Status=0xC000006D
+2024-03-10T11:00:50Z DC01 Microsoft-Windows-Security-Auditing EventID=4625 TargetUserName=administrator IpAddress=203.0.113.120 IpPort=49004 LogonType=10 Status=0xC000006D
+2024-03-10T11:01:00Z DC01 Microsoft-Windows-Security-Auditing EventID=4625 TargetUserName=administrator IpAddress=203.0.113.120 IpPort=49005 LogonType=10 Status=0xC000006D
+2024-03-10T11:01:10Z DC01 Microsoft-Windows-Security-Auditing EventID=4625 TargetUserName=administrator IpAddress=203.0.113.120 IpPort=49006 LogonType=10 Status=0xC000006D
+2024-03-10T11:01:20Z DC01 Microsoft-Windows-Security-Auditing EventID=4625 TargetUserName=administrator IpAddress=203.0.113.120 IpPort=49007 LogonType=10 Status=0xC000006D
+2024-03-10T11:01:30Z DC01 Microsoft-Windows-Security-Auditing EventID=4625 TargetUserName=administrator IpAddress=203.0.113.120 IpPort=49008 LogonType=10 Status=0xC000006D
+2024-03-10T11:01:40Z DC01 Microsoft-Windows-Security-Auditing EventID=4625 TargetUserName=administrator IpAddress=203.0.113.120 IpPort=49009 LogonType=10 Status=0xC000006D
+2024-03-10T11:01:50Z DC01 Microsoft-Windows-Security-Auditing EventID=4625 TargetUserName=administrator IpAddress=203.0.113.120 IpPort=49010 LogonType=10 Status=0xC000006D
+2024-03-10T11:02:00Z DC01 Microsoft-Windows-Security-Auditing EventID=4625 TargetUserName=administrator IpAddress=203.0.113.120 IpPort=49011 LogonType=10 Status=0xC000006D
+2024-03-10T11:02:10Z DC01 Microsoft-Windows-Security-Auditing EventID=4625 TargetUserName=administrator IpAddress=203.0.113.120 IpPort=49012 LogonType=10 Status=0xC000006D
+2024-03-10T11:02:20Z DC01 Microsoft-Windows-Security-Auditing EventID=4625 TargetUserName=administrator IpAddress=203.0.113.120 IpPort=49013 LogonType=10 Status=0xC000006D
+2024-03-10T11:02:30Z DC01 Microsoft-Windows-Security-Auditing EventID=4625 TargetUserName=administrator IpAddress=203.0.113.120 IpPort=49014 LogonType=10 Status=0xC000006D
+2024-03-10T11:02:45Z DC01 Microsoft-Windows-Security-Auditing EventID=4624 TargetUserName=administrator IpAddress=203.0.113.120 IpPort=49100 LogonType=10
+2024-03-10T11:03:15Z DC01 Microsoft-Windows-Security-Auditing EventID=4672 TargetUserName=administrator
+2024-03-10T11:07:45Z DC01 Microsoft-Windows-Security-Auditing EventID=4720 TargetUserName=svc_backup2 Computer=DC01
+2024-03-10T10:02:45Z WS02 Microsoft-Windows-Security-Auditing EventID=4624 TargetUserName=carol IpAddress=192.0.2.44 IpPort=50999 LogonType=2

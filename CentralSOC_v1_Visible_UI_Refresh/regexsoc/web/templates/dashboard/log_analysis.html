@@ -1,0 +1,21 @@
+{% extends "app_base.html" %}
+{% block title %}Log Analysis - CentralSOC{% endblock %}
+{% block content %}
+<h1>Log analysis</h1>
+<p class="page-sub">Upload up to 8 log files together to parse them, run every enabled detection rule, extract IOCs and score the results. Files are validated by extension and content before anything is stored, and are never executed.</p>
+
+<div class="panel">
+  <form method="post" action="{{ url_for('dashboard.log_analysis_submit') }}" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label for="log-file">Log files (.log, .txt, .csv, .json, .jsonl) — maximum 8 per batch</label>
+    <input type="file" id="log-file" name="file" accept=".log,.txt,.csv,.json,.jsonl" multiple required>
+    <button type="submit" class="btn btn-primary mt-12">Analyze selected files</button>
+  </form>
+</div>
+
+<div class="panel">
+  <div class="panel-title"><h2>From the command line</h2></div>
+  <p class="dim mb-tight">The same validation and pipeline are also available without the browser:</p>
+  <div class="raw-log">python -m regexsoc ingest &lt;file&gt; --user your-username</div>
+</div>
+{% endblock %}

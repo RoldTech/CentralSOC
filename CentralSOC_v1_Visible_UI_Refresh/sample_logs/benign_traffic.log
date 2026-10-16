@@ -1,0 +1,19 @@
+Mar 10 08:07:00 web01 sshd[1000]: Accepted publickey for alice from 192.0.2.10 port 50000 ssh2
+Mar 10 08:14:00 web01 sshd[1001]: Accepted publickey for alice from 192.0.2.10 port 50001 ssh2
+Mar 10 08:21:00 web01 sshd[1002]: Accepted publickey for alice from 192.0.2.10 port 50002 ssh2
+Mar 10 08:28:00 web01 sshd[1003]: Accepted publickey for alice from 192.0.2.10 port 50003 ssh2
+Mar 10 08:35:00 web01 sshd[1004]: Accepted publickey for alice from 192.0.2.10 port 50004 ssh2
+Mar 10 08:42:00 web01 sshd[1005]: Accepted publickey for alice from 192.0.2.10 port 50005 ssh2
+Mar 10 08:49:00 web01 sshd[1006]: Accepted publickey for alice from 192.0.2.10 port 50006 ssh2
+Mar 10 08:56:00 web01 sshd[1007]: Accepted publickey for alice from 192.0.2.10 port 50007 ssh2
+Mar 10 09:03:00 web01 sshd[1008]: Accepted publickey for alice from 192.0.2.10 port 50008 ssh2
+Mar 10 09:10:00 web01 sshd[1009]: Accepted publickey for alice from 192.0.2.10 port 50009 ssh2
+192.0.2.20 - - [10/Mar/2024:08:10:17 +0000] "GET / HTTP/1.1" 200 2048 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+192.0.2.20 - - [10/Mar/2024:08:10:34 +0000] "GET /about.html HTTP/1.1" 200 2048 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+192.0.2.20 - - [10/Mar/2024:08:10:51 +0000] "GET /products?id=3 HTTP/1.1" 200 2048 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+192.0.2.20 - - [10/Mar/2024:08:11:08 +0000] "GET /static/app.js HTTP/1.1" 200 2048 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+192.0.2.20 - - [10/Mar/2024:08:11:25 +0000] "GET /contact HTTP/1.1" 200 2048 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+192.0.2.20 - - [10/Mar/2024:08:11:42 +0000] "GET /blog/why-select-from-menus-matters HTTP/1.1" 200 2048 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+192.0.2.20 - - [10/Mar/2024:08:11:59 +0000] "GET /administrator-guide.html HTTP/1.1" 200 2048 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+Mar 10 09:11:59 web01 sshd[2000]: Failed password for bob from 192.0.2.11 port 50500 ssh2
+Mar 10 09:12:05 web01 sshd[2001]: Accepted password for bob from 192.0.2.11 port 50501 ssh2

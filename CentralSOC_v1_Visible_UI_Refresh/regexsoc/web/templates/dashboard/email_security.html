@@ -1,0 +1,141 @@
+{% extends "app_base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Email Security - CentralSOC{% endblock %}
+{% block content %}
+<div class="workspace-heading"><div><h1>Email security investigation</h1><p class="dim">Inspect suspicious emails safely. Authentication claims are not automatically independently verified.</p></div><span class="status-pill">Manual analysis</span></div>
+<p class="page-sub">Paste a raw email or upload a .eml file to check SPF/DKIM/DMARC and phishing indicators.</p>
+
+<div class="not-implemented-note">Analyses are now saved as metadata-only cases (fingerprint, sender, subject and verdict). Raw message bodies and attachments are not retained. <a href="{{ url_for('email_security.cases_index') }}">View saved investigations</a>.</div>
+
+<div class="email-workspace">
+<div class="panel email-upload-panel">
+  <div class="panel-title"><h2>Submit suspicious email</h2></div>
+  <p class="dim">Paste complete RFC 5322 source with headers, or choose an .eml attachment. Email contents are untrusted and will not be executed.</p>
+  <form method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label for="raw-email">Paste raw email (headers + body)</label>
+    <textarea id="raw-email" name="raw_email" class="raw-email-input"
+             placeholder="From: alice@example.com&#10;To: bob@example.com&#10;Subject: ...&#10;&#10;body text"></textarea>
+    <label for="email-file">...or upload a .eml file (used instead of pasted text if both are given)</label>
+    <input type="file" id="email-file" name="file" accept=".eml,.txt">
+    <div class="email-actions"><button type="submit" class="btn btn-primary">Analyze message</button><span class="dim">Case metadata is saved; original email content is not retained.</span></div>
+  </form>
+</div>
+
+</div>
+{% if result %}
+{% set h = result.parsed.headers %}
+{% set v = result.verdict %}
+<div class="panel email-result-panel">
+  <div class="panel-title"><h2>Analysis verdict</h2></div>
+  <p><a class="btn btn-primary" href="{{ url_for('email_security.case_detail', case_id=result.case.id) }}">Open saved investigation #{{ result.case.id }}</a></p>
+  <p>{{ m.classification_badge(v.classification) }}
+    <span class="dim">score {{ v.score }}/100 &middot; confidence {{ v.confidence }}</span></p>
+  <div class="score-bar-track"><div class="score-bar-fill badge-class-{{ v.classification|lower }}-fill w-{{ (v.score // 5 * 5) }}"></div></div>
+  {% if v.reasons %}
+  <table class="kv-table">
+    {% for reason in v.reasons %}<tr><td>&bull;</td><td>{{ reason }}</td></tr>{% endfor %}
+  </table>
+  {% else %}
+  <p class="dim">No phishing indicators found.</p>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <div class="panel-title"><h2>Email overview</h2></div>
+  <table class="kv-table">
+    <tr><td class="k">From</td><td>{{ (h.from_[0].raw if h.from_ else '—') }}</td></tr>
+    <tr><td class="k">To</td><td>{{ h.to|map(attribute='raw')|join('; ') or '—' }}</td></tr>
+    {% if h.reply_to %}<tr><td class="k">Reply-To</td><td>{{ h.reply_to|map(attribute='raw')|join('; ') }}</td></tr>{% endif %}
+    <tr><td class="k">Subject</td><td>{{ h.subject or '—' }}</td></tr>
+    <tr><td class="k">Date</td><td class="mono">{{ h.date.strftime('%Y-%m-%d %H:%M:%S %z') if h.date else (h.date_raw or '—') }}</td></tr>
+    <tr><td class="k">Message-ID</td><td class="mono">{{ h.message_id or '—' }}</td></tr>
+    <tr><td class="k">Size</td><td>{{ result.parsed.size_bytes }} bytes</td></tr>
+  </table>
+</div>
+
+<div class="panel email-result-panel">
+  <div class="panel-title"><h2>Authentication and alignment</h2></div>
+  <p class="dim">Reported header results and local alignment assessments are not proof of independent DNS verification.</p>
+  <div class="detail-grid">
+    <div class="field"><div class="k">SPF Authentication</div><div class="v">{{ result.spf.result }}</div></div>
+    <div class="field"><div class="k">SPF Alignment</div><div class="v">{{ result.spf.alignment }} ({{ result.spf.alignment_mode|lower }})</div></div>
+    <div class="field"><div class="k">DKIM Authentication</div><div class="v">{{ result.dkim.result }}</div></div>
+    <div class="field"><div class="k">DMARC</div><div class="v">{{ result.dmarc.result }}</div></div>
+  </div>
+  {% if result.dkim.signatures %}
+  <p class="dim mb-tight">DKIM signatures:</p>
+  <ul class="evidence-list">
+    {% for sig in result.dkim.signatures %}
+    <li>d={{ sig.signing_domain or '(none)' }} &mdash; {{ sig.result }} &mdash; alignment {{ sig.alignment }}
+      {% if sig.verified_by != 'authentication-results' %}<span class="dim">[{{ sig.verified_by }}]</span>{% endif %}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  <p class="dim mb-tight">DMARC reason: {{ result.dmarc.reason }}</p>
+  {% if result.dmarc.reported_result %}
+  <p class="dim">Message's own Authentication-Results reported dmarc={{ result.dmarc.reported_result }} (shown for comparison, not used as the verdict above).</p>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <div class="panel-title"><h2>Phishing indicators</h2></div>
+  {% if result.indicators %}
+  {% for ind in result.indicators %}
+  <div class="indicator-row sev-{{ ind.severity|lower }}">
+    {{ m.severity_badge(ind.severity) }} <strong>{{ ind.category }}</strong> &mdash; {{ ind.description }}
+    {% if ind.evidence %}<div class="dim mono text-xs">{{ ind.evidence }}</div>{% endif %}
+  </div>
+  {% endfor %}
+  {% else %}
+  <p class="dim">No indicators found.</p>
+  {% endif %}
+</div>
+
+<div class="panel email-result-panel">
+  <div class="panel-title"><h2>URL and attachment triage</h2></div>
+  <p class="dim">Offline metadata only. No links are opened, DNS queried, reputation checked, or attachment code executed. These are investigation leads, not proof of compromise.</p>
+  {% if result.metadata_findings %}
+    <div class="email-findings">
+    {% for finding in result.metadata_findings %}
+      <div class="indicator-row sev-{{ finding.severity|lower }}">
+        {{ m.severity_badge(finding.severity) }}
+        <strong>{{ finding.kind }}</strong> — {{ finding.summary }}
+        <div class="dim mono text-xs">{{ finding.evidence }}</div>
+      </div>
+    {% endfor %}
+    </div>
+  {% else %}<p class="dim">No URL or attachment metadata flags detected. This does not establish that the email is safe.</p>{% endif %}
+</div>
+
+<div class="panel">
+  <div class="panel-title"><h2>Message structure</h2></div>
+  {% if result.parsed.attachments %}
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Filename</th><th scope="col">Content type</th><th scope="col" class="num">Size</th></tr></thead>
+    <tbody>
+      {% for a in result.parsed.attachments %}
+      <tr><td class="mono">{{ a.filename }}</td><td>{{ a.content_type }}</td><td class="num">{{ a.size_bytes }} bytes</td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  <p class="not-implemented-note">Attachment contents are not executed or opened. Filename-extension indicators below are heuristic; attachment hashing and MIME verification are not implemented.</p>
+  {% else %}
+  <p class="dim">No attachments.</p>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <div class="panel-title"><h2>Raw body (escaped, never rendered as HTML)</h2></div>
+  <p class="dim mb-tight">Shown as source text only &mdash; this content is attacker-controlled and is never executed or rendered live.</p>
+  {% if result.parsed.plain_text_body %}
+  <p class="dim mb-tight">Plain text:</p>
+  <div class="raw-log">{{ result.parsed.plain_text_body[:5000] }}</div>
+  {% endif %}
+  {% if result.parsed.html_body %}
+  <p class="dim mb-tight mt-12">HTML source:</p>
+  <div class="raw-log">{{ result.parsed.html_body[:5000] }}</div>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

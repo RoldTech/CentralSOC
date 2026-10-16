@@ -1,0 +1,48 @@
+{% extends "app_base.html" %}
+{% import "macros.html" as m %}
+{% block title %}IOCs - CentralSOC{% endblock %}
+{% block content %}
+<h1>Indicators of compromise</h1>
+<p class="page-sub">{{ total }} distinct indicator{{ 's' if total != 1 }} matching these filters.</p>
+
+<form class="filter-bar" method="get">
+  <div class="filter-field"><label for="f-type">Type</label>
+    <select id="f-type" name="type">
+      <option value="">Any</option>
+      {% for t in ioc_types %}<option value="{{ t }}" {{ 'selected' if filters.type == t }}>{{ t }}</option>{% endfor %}
+    </select></div>
+  <div class="filter-field"><label for="f-risk">Risk</label>
+    <select id="f-risk" name="risk">
+      <option value="">Any</option>
+      {% for r in ("CRITICAL","HIGH","MEDIUM","LOW","UNKNOWN") %}
+      <option value="{{ r }}" {{ 'selected' if filters.risk == r }}>{{ r }}</option>
+      {% endfor %}
+    </select></div>
+  <div class="filter-field"><label for="f-value">Value contains</label>
+    <input type="text" id="f-value" name="value" value="{{ filters.value }}" placeholder="203.0.113 or example.com"></div>
+  <button type="submit" class="btn btn-primary">Apply filters</button>
+  {% if filters.type or filters.value or filters.risk %}<a class="btn" href="{{ url_for('dashboard.iocs_list') }}">Clear</a>{% endif %}
+</form>
+
+{% if iocs %}
+<div class="table-wrap"><table>
+  <thead><tr><th scope="col">Type</th><th scope="col">Value</th><th scope="col">Risk</th>
+    <th scope="col" class="num">Occurrences</th><th scope="col">First seen</th><th scope="col">Last seen</th></tr></thead>
+  <tbody>
+    {% for i in iocs %}
+    <tr>
+      <td>{{ i.ioc_type }}</td>
+      <td class="mono"><a href="{{ url_for('dashboard.ioc_detail', ioc_type=i.ioc_type, value=i.value) }}">{{ i.value }}</a></td>
+      <td>{{ m.risk_badge(i.risk) }}</td>
+      <td class="num">{{ i.occurrences }}</td>
+      <td class="mono">{{ i.first_seen.strftime('%Y-%m-%d %H:%M') if i.first_seen else '—' }}</td>
+      <td class="mono">{{ i.last_seen.strftime('%Y-%m-%d %H:%M') if i.last_seen else '—' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table></div>
+{{ m.pagination(page, page_size, total, 'dashboard.iocs_list', qargs) }}
+{% else %}
+<div class="empty-state">No IOCs match these filters. Clear a filter, or ingest a log to extract indicators.</div>
+{% endif %}
+{% endblock %}

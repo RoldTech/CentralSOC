@@ -1,0 +1,157 @@
+{% extends "app_base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Overview - CentralSOC{% endblock %}
+{% block content %}
+<div class="soc-page-intro"><div><p class="soc-eyebrow">SECURITY OPERATIONS CENTER / COMMAND OVERVIEW</p><h1>Security Overview</h1><p class="soc-intro-caption">Threat visibility, investigation priorities, and security telemetry in one workspace.</p></div><a class="soc-overview-link" href="{{ url_for('dashboard.alerts_list') }}">Open alert queue →</a></div>
+<p class="page-sub">{{ stats.total_events }} events across {{ stats.total_log_files }} ingested log file{{ 's' if stats.total_log_files != 1 }}.</p>
+
+<div class="card-grid soc-priority-grid">
+  <div class="stat-card sev-critical"><div class="n">{{ stats.alert_counts.CRITICAL }}</div><div class="label">Critical alerts</div></div>
+  <div class="stat-card sev-high"><div class="n">{{ stats.alert_counts.HIGH }}</div><div class="label">High alerts</div></div>
+  <div class="stat-card sev-medium"><div class="n">{{ stats.alert_counts.MEDIUM }}</div><div class="label">Medium alerts</div></div>
+  <div class="stat-card sev-low"><div class="n">{{ stats.alert_counts.LOW }}</div><div class="label">Low alerts</div></div>
+  <div class="stat-card"><div class="n">{{ stats.failed_logins }}</div><div class="label">Failed logins</div></div>
+  <div class="stat-card"><div class="n">{{ stats.successful_logins }}</div><div class="label">Successful logins</div></div>
+  <div class="stat-card"><div class="n">{{ stats.total_iocs }}</div><div class="label">IOCs extracted</div></div>
+  <div class="stat-card"><div class="n">{{ detection_stats.matches }}</div><div class="label">Detection matches</div></div>
+  <div class="stat-card"><div class="n">{{ detection_stats.rules_fired }}</div><div class="label">Rules triggered</div></div>
+  {% if incident_stats is not none %}
+  <div class="stat-card"><div class="n">{{ incident_stats.total }}</div><div class="label">Total incidents</div></div>
+  <div class="stat-card"><div class="n">{{ incident_stats.active }}</div><div class="label">Active incidents</div></div>
+  {% endif %}
+</div>
+
+{% if acknowledgement is not none %}
+<section class="panel" aria-label="Alert acknowledgement performance">
+  <div class="panel-title">
+    <div><h2>Alert acknowledgement</h2><p class="dim">First acknowledgement only · All-time records · Not a resolution or SLA measure</p></div>
+    <a href="{{ url_for('dashboard.alerts_list') }}">Review alerts</a>
+  </div>
+  <div class="card-grid">
+    <div class="stat-card"><div class="n">{{ acknowledgement.pending }}</div><div class="label">Active alerts awaiting acknowledgement</div></div>
+    <div class="stat-card"><div class="n">{{ acknowledgement.acknowledged }}</div><div class="label">Acknowledged alerts (all time)</div></div>
+    <div class="stat-card"><div class="n">{% if acknowledgement.mean_time_to_ack_seconds is not none %}{{ '%.1f' | format(acknowledgement.mean_time_to_ack_seconds / 60) }} min{% else %}—{% endif %}</div><div class="label">Mean time to acknowledge (valid samples)</div></div>
+    <div class="stat-card"><div class="n">{{ acknowledgement.sample_size }}</div><div class="label">Valid timing samples</div></div>
+  </div>
+  {% if acknowledgement.sample_size == 0 %}<p class="dim">No valid acknowledgement intervals yet. Timing metrics appear after an alert is acknowledged with a valid original timestamp.</p>{% endif %}
+</section>
+{% endif %}
+
+{% if workload is not none %}
+<section class="panel" aria-label="SOC analyst workload">
+  <div class="panel-title">
+    <div><h2>Analyst triage workload</h2><p class="dim">Current active alerts · New and Investigating only · Not a performance score</p></div>
+    <a href="{{ url_for('dashboard.alerts_list') }}">Open alert queue</a>
+  </div>
+  <div class="card-grid">
+    <div class="stat-card"><div class="n">{{ workload.active }}</div><div class="label">Active alerts</div></div>
+    <div class="stat-card"><div class="n">{{ workload.unassigned }}</div><div class="label">Awaiting assignment</div></div>
+    <div class="stat-card"><div class="n">{{ workload.new }}</div><div class="label">New</div></div>
+    <div class="stat-card"><div class="n">{{ workload.investigating }}</div><div class="label">Investigating</div></div>
+  </div>
+  {% if workload.analysts %}
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Assigned analyst</th><th scope="col">Active alerts</th><th scope="col">Highest risk score</th></tr></thead>
+    <tbody>{% for analyst in workload.analysts %}
+      <tr><td>{{ analyst.username }}</td><td>{{ analyst.active_count }}</td><td>{{ analyst.highest_risk }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="dim">No assigned active alerts. Use the alert queue to assign incoming work.</p>{% endif %}
+</section>
+{% endif %}
+
+<section class="analytics-head soc-telemetry-header" aria-label="Security analytics">
+  <div><h2>Security telemetry</h2><p class="dim">Database-backed activity · UTC · {{ analytics.start }} to {{ analytics.end }}</p></div>
+  <div class="analytics-range" aria-label="Analytics time window">
+    <a class="range-choice {{ 'selected' if analytics.days == 7 else '' }}" href="{{ url_for('dashboard.overview', days=7) }}">7 days</a>
+    <a class="range-choice {{ 'selected' if analytics.days == 30 else '' }}" href="{{ url_for('dashboard.overview', days=30) }}">30 days</a>
+    <a class="range-choice {{ 'selected' if analytics.days is none else '' }}" href="{{ url_for('dashboard.overview', days='all') }}">All Time</a>
+  </div>
+</section>
+<div class="analytics-grid soc-command-charts">
+  <section class="panel chart-panel chart-wide">
+    <div class="panel-title"><h2>Events and alerts over time</h2><span class="dim">{{ analytics.granularity }} · UTC</span></div>
+    <div class="chart-canvas-wrap"><canvas id="timeline-chart" role="img" aria-label="Daily security event and alert counts"></canvas></div>
+    <div class="chart-legend"><span><i class="legend-dot" style="--dot:#38c2d4"></i>Events</span><span><i class="legend-dot" style="--dot:#f09a61"></i>Alerts</span></div>
+  </section>
+  <section class="panel chart-panel">
+    <div class="panel-title"><h2>Alert severity</h2><span class="dim">Selected period</span></div>
+    <div class="chart-canvas-wrap"><canvas id="severity-chart" role="img" aria-label="Distribution of alerts by severity"></canvas></div>
+  </section>
+  <section class="panel chart-panel">
+    <div class="panel-title"><h2>Detection categories</h2><span class="dim">Top six</span></div>
+    <div class="chart-canvas-wrap"><canvas id="categories-chart" role="img" aria-label="Detection counts by category"></canvas></div>
+  </section>
+  <section class="panel chart-panel">
+    <div class="panel-title"><h2>Authentication outcomes</h2><span class="dim">Selected period</span></div>
+    <div class="chart-canvas-wrap"><canvas id="auth-chart" role="img" aria-label="Failed and successful authentication event counts"></canvas></div>
+  </section>
+</div>
+<script id="analytics-data" type="application/json">{{ analytics | tojson }}</script>
+<script defer src="{{ url_for('static', filename='js/soc_charts.js') }}"></script>
+
+{% if incident_stats is not none %}
+<div class="panel">
+  <div class="panel-title"><h2>Incident operations</h2><a href="{{ url_for('incidents.list_incidents') }}">View incidents</a></div>
+  <div class="card-grid">
+    {% for status, count in incident_stats.by_status.items() %}
+      <div class="stat-card"><div class="n">{{ count }}</div><div class="label">{{ status }}</div></div>
+    {% endfor %}
+  </div>
+  {% if incident_stats.recent %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Incident</th><th>Severity</th><th>Status</th><th>Owner</th><th>Updated (UTC)</th></tr></thead>
+    <tbody>
+      {% for item in incident_stats.recent %}
+      <tr>
+        <td><a href="{{ url_for('incidents.detail', incident_id=item.id) }}">{{ item.title }}</a></td>
+        <td>{{ m.severity_badge(item.severity) }}</td>
+        <td>{{ item.status }}</td>
+        <td>{{ item.owner or 'Unassigned' }}</td>
+        <td class="mono">{{ item.updated_at.strftime('%Y-%m-%d %H:%M') if item.updated_at else '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<p class="dim">No incident records yet.</p>{% endif %}
+</div>
+{% endif %}
+
+<div class="detail-grid">
+  <div class="panel">
+    <div class="panel-title"><h2>Top source IPs</h2></div>
+    {% if stats.top_source_ips %}
+      {% for ip, n in stats.top_source_ips %}{{ m.bar_row(ip, n, max_ip) }}{% endfor %}
+    {% else %}<p class="dim">No events ingested yet.</p>{% endif %}
+  </div>
+  <div class="panel">
+    <div class="panel-title"><h2>Detection categories</h2></div>
+    {% if stats.detection_categories %}
+      {% for cat, n in stats.detection_categories %}{{ m.bar_row(cat, n, max_cat) }}{% endfor %}
+    {% else %}<p class="dim">No detections yet.</p>{% endif %}
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title"><h2>Recent alerts</h2><a href="{{ url_for('dashboard.alerts_list') }}">View all</a></div>
+  {% if recent %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Severity</th><th>Rule</th><th>Source IP</th><th>Username</th><th>Status</th><th>Time</th></tr></thead>
+    <tbody>
+      {% for a in recent %}
+      <tr>
+        <td>{{ m.severity_badge(a.severity) }}</td>
+        <td><a href="{{ url_for('dashboard.alert_detail', alert_pk=a.id) }}">{{ a.rule_name }}</a></td>
+        <td class="mono">{{ a.source_ip or '—' }}</td>
+        <td>{{ a.username or '—' }}</td>
+        <td>{{ m.status_pill(a.status) }}</td>
+        <td class="mono">{{ a.timestamp.strftime('%Y-%m-%d %H:%M') if a.timestamp else '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <div class="empty-state">No alerts yet. Ingest a log to start detecting activity: <code>python -m regexsoc ingest &lt;file&gt;</code> or upload one via the API.</div>
+  {% endif %}
+</div>
+{% endblock %}

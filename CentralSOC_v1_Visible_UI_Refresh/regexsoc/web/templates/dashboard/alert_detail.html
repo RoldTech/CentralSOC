@@ -1,0 +1,184 @@
+{% extends "app_base.html" %}
+{% import "macros.html" as m %}
+{% block title %}{{ alert.rule_name }} - CentralSOC{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('dashboard.alerts_list') }}">&larr; Back to alerts</a>
+<h1>{{ alert.rule_name }}</h1>
+<p class="page-sub mono">{{ alert.alert_id }} &middot; {{ alert.rule_id }}</p>
+
+
+<p><a class="btn btn-primary" href="{{ url_for('operations.investigations', alert_id=alert.id) }}">Investigation assistant</a></p>
+<nav class="investigation-nav" aria-label="Investigation sections">
+  <a href="#alert-summary">Overview</a><a href="#alert-evidence">Evidence</a>
+  {% if can_view_events %}<a href="#related-telemetry">Related events</a>{% endif %}
+  <a href="#case-links">Cases</a><a href="#analyst-workflow">Analyst actions</a>
+</nav>
+<div class="detail-grid" id="alert-summary">
+  <div class="field"><div class="k">Severity</div><div class="v">{{ m.severity_badge(alert.severity) }}</div></div>
+  <div class="field"><div class="k">Risk score</div><div class="v">{{ alert.risk_score }} / 100</div></div>
+  <div class="field"><div class="k">Status</div><div class="v">{{ m.status_pill(alert.status) }}</div></div>
+  <div class="field"><div class="k">Assigned analyst</div><div class="v">{{ alert.assigned_to or "Unassigned" }}</div></div>
+  <div class="field"><div class="k">Source IP</div><div class="v mono">{{ alert.source_ip or '—' }}</div></div>
+  <div class="field"><div class="k">Target</div><div class="v mono">{{ span.target or '—' }}</div></div>
+  <div class="field"><div class="k">Username</div><div class="v">{{ alert.username or '—' }}</div></div>
+  <div class="field"><div class="k">Occurrences</div><div class="v">{{ span.occurrences }}</div></div>
+  <div class="field"><div class="k">First seen</div><div class="v mono">{{ span.first_seen.strftime('%Y-%m-%d %H:%M:%S UTC') if span.first_seen else '—' }}</div></div>
+  <div class="field"><div class="k">Last seen</div><div class="v mono">{{ span.last_seen.strftime('%Y-%m-%d %H:%M:%S UTC') if span.last_seen else '—' }}</div></div>
+</div>
+
+<div class="panel" id="alert-evidence">
+  <div class="panel-title"><h2>Why this fired</h2></div>
+  <p>{{ alert.reason }}</p>
+</div>
+
+<div class="panel">
+  <div class="panel-title"><h2>Recommended response</h2></div>
+  <p>{{ alert.recommended_response }}</p>
+  <p class="dim">This is guidance for the analyst. CentralSOC never takes action against external systems automatically.</p>
+</div>
+
+{% if alert.evidence %}
+<div class="panel">
+  <div class="panel-title"><h2>Evidence</h2></div>
+  <ul class="evidence-list">{% for line in alert.evidence %}<li>{{ line }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+{% if timeline %}
+<div class="panel">
+  <div class="panel-title"><h2>Event timeline</h2></div>
+  <ol class="timeline">
+    {% for e in timeline %}
+    <li>
+      <span class="dot"></span>
+      <div class="t-time">{{ e.timestamp.strftime('%Y-%m-%d %H:%M:%S') if e.timestamp else 'no timestamp' }}</div>
+      <div class="t-body">
+        <a href="{{ url_for('dashboard.event_detail', event_id=e.id) }}">{{ e.event_type }}</a>
+        {% if e.username %} &mdash; {{ e.username }}{% endif %}
+        {% if e.http_path %} &mdash; <span class="mono">{{ e.http_path }}</span>{% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+</div>
+{% endif %}
+
+{% if can_view_events %}
+<section class="panel" id="related-telemetry" aria-labelledby="related-title">
+  <div class="panel-title"><h2 id="related-title">Related telemetry</h2><span class="dim">Up to {{ limit }} recent records</span></div>
+  <p class="dim">Other log files containing the same known source IP or username. These are investigation leads, not confirmed matches to this detection.</p>
+  {% if alert.source_ip or alert.username %}
+  <div class="investigation-links">
+    {% if alert.source_ip %}<a class="btn" href="{{ url_for('dashboard.events_list', source_ip=alert.source_ip, time_range='all') }}">Events from {{ alert.source_ip }}</a>{% endif %}
+    {% if alert.username %}<a class="btn" href="{{ url_for('dashboard.events_list', username=alert.username, time_range='all') }}">Events for account {{ alert.username }}</a>{% endif %}
+  </div>
+  {% if related_events %}
+  <div class="table-wrap"><table><thead><tr><th>Time (UTC)</th><th>Event</th><th>Source IP</th><th>Account</th><th>Evidence</th></tr></thead><tbody>
+  {% for e in related_events %}<tr>
+    <td class="mono">{{ e.timestamp.strftime('%Y-%m-%d %H:%M') if e.timestamp else 'Unknown' }}</td>
+    <td>{{ e.event_type }}</td><td class="mono">{{ e.source_ip or '—' }}</td><td>{{ e.username or '—' }}</td>
+    <td><a href="{{ url_for('dashboard.event_detail', event_id=e.id) }}">Review event #{{ e.id }}</a></td>
+  </tr>{% endfor %}
+  </tbody></table></div>
+  {% else %}<p class="dim">No related records found in other ingested log files.</p>{% endif %}
+  {% else %}<p class="dim">No source IP or account is available for correlation.</p>{% endif %}
+</section>
+{% endif %}
+
+<section class="panel" id="case-links">
+  <div class="panel-title"><h2>Incident association</h2></div>
+  {% if can_view_incidents %}
+    {% if linked_incidents %}<ul class="case-link-list">{% for case in linked_incidents %}
+      <li><a href="{{ url_for('incidents.detail', incident_id=case.id) }}">INC-{{ case.id }} — {{ case.title }}</a> <span class="dim">{{ case.status }}</span></li>
+    {% endfor %}</ul>
+    {% else %}<p class="dim">No incident is linked to this alert yet.</p>{% endif %}
+    <a class="btn" href="{{ url_for('incidents.list_incidents') }}">Open incident workspace</a>
+  {% else %}<p class="dim">Incident information requires incident-view permission.</p>{% endif %}
+</section>
+
+{% if can_assign_alerts %}
+<div class="panel">
+  <div class="panel-title"><h2>Alert ownership</h2></div>
+  <form method="post" action="{{ url_for('dashboard.alert_assign', alert_pk=alert.id) }}" class="status-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label for="assigned-to">Assign to analyst</label>
+    <select name="assigned_to" id="assigned-to">
+      <option value="">Unassigned</option>
+      {% for analyst in eligible_analysts %}
+      <option value="{{ analyst.username }}" {{ 'selected' if alert.assigned_to == analyst.username }}>{{ analyst.username }} — {{ {"SOC_L1": "SOC Analyst L1", "SOC_L2": "SOC Analyst L2", "SOC_L3": "SOC Analyst L3", "SOC_MANAGER": "SOC Manager", "ADMIN": "Administrator", "ANALYST": "Legacy SOC Analyst"}.get(analyst.role, analyst.role) }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary">Save assignment</button>
+  </form>
+</div>
+{% endif %}
+<div class="panel">
+  <div class="panel-title"><h2>First acknowledgement</h2></div>
+  {% if alert.acknowledged_at %}
+    <p>First acknowledged by <strong>{{ alert.acknowledged_by }}</strong> at {{ alert.acknowledged_at.strftime('%Y-%m-%d %H:%M UTC') }}.</p>
+  {% elif can_update_alert_status %}
+    <form method="post" action="{{ url_for('dashboard.alert_acknowledge', alert_pk=alert.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button class="btn btn-primary" type="submit">Acknowledge alert</button>
+    </form>
+  {% else %}<p class="dim">Not yet acknowledged.</p>{% endif %}
+</div>
+<div class="panel" id="analyst-workflow">
+  <div class="panel-title"><h2>Update status</h2></div>
+  {% if can_update_alert_status %}
+  <form class="status-form" method="post" action="{{ url_for('dashboard.alert_update_status', alert_pk=alert.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label for="alert-next-status">New status</label>
+    <select id="alert-next-status" name="status">
+      {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if s == alert.status }}>{{ s }}</option>{% endfor %}
+    </select>
+    <label for="alert-status-note">Reason or note (optional)</label>
+    <input type="text" id="alert-status-note" name="note" placeholder="Explain why the status changed" maxlength="1000">
+    <button type="submit" class="btn btn-primary">Update status</button>
+  </form>
+  {% if alert.updated_by %}<p class="dim mb-tight">Last updated by {{ alert.updated_by }} at {{ alert.updated_at.strftime('%Y-%m-%d %H:%M') if alert.updated_at else '' }}.</p>{% endif %}
+  {% else %}
+  <p class="readonly-note">Your role ({{ g.current_user.role }}) can view alerts but not change their status.</p>
+  {% endif %}
+</div>
+<div class="panel">
+  <div class="panel-title"><h2>Analyst assessment</h2></div>
+  <p class="dim">Classify the generated alert based on reviewed evidence. True negatives and false negatives require separate evaluation of events with ground truth.</p>
+  <p><strong>Current verdict:</strong> {{ (alert.analyst_verdict or 'NOT REVIEWED')|replace('_',' ') }}
+  {% if alert.verdict_by %}<span class="dim"> by {{ alert.verdict_by }}</span>{% endif %}</p>
+  {% if alert.verdict_reason %}<p class="activity-detail">{{ alert.verdict_reason }}</p>{% endif %}
+  {% if can_update_alert_status %}
+  <form class="verdict-form" method="post" action="{{ url_for('dashboard.alert_set_verdict', alert_pk=alert.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div><label for="verdict">Reviewed outcome</label><select id="verdict" name="verdict" required>
+      <option value="TRUE_POSITIVE">True positive — confirmed suspicious activity</option>
+      <option value="FALSE_POSITIVE">False positive — benign activity incorrectly alerted</option>
+      <option value="INCONCLUSIVE">Inconclusive — more evidence required</option>
+    </select></div>
+    <div><label for="verdict-reason">Evidence and justification (required)</label><textarea id="verdict-reason" name="reason" maxlength="1000" minlength="5" required rows="3" placeholder="Describe evidence supporting your assessment"></textarea></div>
+    <button class="btn btn-primary" type="submit">Save analyst assessment</button>
+  </form>{% endif %}
+</div>
+<div class="panel analyst-history">
+  <div class="panel-title"><h2>Analyst activity history</h2></div>
+  {% if can_update_alert_status %}
+  <form method="post" action="{{ url_for('dashboard.alert_add_note', alert_pk=alert.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label for="alert-note">Add investigation note</label>
+    <textarea id="alert-note" name="note" maxlength="1000" required rows="3" placeholder="Evidence, hypothesis, or next investigative step"></textarea>
+    <button type="submit" class="btn btn-primary">Add note</button>
+  </form>
+  {% endif %}
+  {% if activity %}
+  <ol class="timeline">
+  {% for entry in activity %}
+    <li><strong>{{ entry.action|replace('_', ' ') }}</strong> by {{ entry.username }}
+      <span class="dim">{{ entry.timestamp.strftime('%Y-%m-%d %H:%M UTC') }}</span>
+      <p class="activity-detail">{{ entry.detail|activity_summary(entry.action) }}</p>
+    </li>
+  {% endfor %}
+  </ol>
+  {% else %}<p class="dim">No recorded analyst actions yet.</p>{% endif %}
+</div>
+
+{% endblock %}

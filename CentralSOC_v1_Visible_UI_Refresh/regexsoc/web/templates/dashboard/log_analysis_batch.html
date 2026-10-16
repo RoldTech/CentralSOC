@@ -1,0 +1,30 @@
+{% extends "app_base.html" %}
+{% block title %}Batch Log Analysis - CentralSOC{% endblock %}
+{% block content %}
+<h1>Batch log analysis results</h1>
+<p class="page-sub">{{ success_count }} processed successfully; {{ failure_count }} rejected. Each file was validated and analyzed separately.</p>
+<div class="panel">
+  <div class="panel-title"><h2>Per-file results</h2></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>File</th><th>Result</th><th>Events</th><th>Alerts</th><th>Details</th></tr></thead>
+      <tbody>
+      {% for item in results %}
+        <tr>
+          <td>{{ item.name }}</td>
+          {% if item.ok %}
+            <td>{{ 'Duplicate (already ingested)' if item.duplicate else 'Processed' }}</td>
+            <td>{{ item.events }}</td>
+            <td>{{ item.alerts }}</td>
+            <td><a href="{{ url_for('dashboard.log_analysis_result', log_file_id=item.log_file_id) }}">View results</a></td>
+          {% else %}
+            <td>Rejected: {{ item.error }}</td><td>—</td><td>—</td><td>—</td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<a class="btn btn-secondary" href="{{ url_for('dashboard.log_analysis_form') }}">Analyze more files</a>
+{% endblock %}

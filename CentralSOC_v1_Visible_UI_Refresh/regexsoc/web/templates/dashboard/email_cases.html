@@ -1,0 +1,8 @@
+{% extends "app_base.html" %}
+{% block title %}Email investigations - CentralSOC{% endblock %}
+{% block content %}
+<div class="workspace-heading"><div><h1>Email investigations</h1><p class="dim">Saved metadata only. Email bodies and attachments are not stored.</p></div><a class="btn btn-primary" href="{{ url_for('email_security.analyze') }}">Analyze email</a></div>
+<div class="panel"><div class="table-wrap"><table><thead><tr><th scope="col">Case</th><th scope="col">Subject</th><th scope="col">Sender</th><th scope="col">Risk</th><th scope="col">Status</th><th scope="col">Created (UTC)</th></tr></thead><tbody>
+{% for case in cases %}<tr><td><a href="{{ url_for('email_security.case_detail', case_id=case.id) }}">#{{ case.id }}</a></td><td>{{ case.subject }}</td><td>{{ case.sender }}</td><td class="num">{{ case.risk_score }}</td><td>{{ case.status }}</td><td>{{ case.created_at }}</td></tr>{% else %}<tr><td colspan="6">No saved investigations. Analyze an email to create one.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

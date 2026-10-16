@@ -1,0 +1,39 @@
+{% extends "app_base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Event #{{ event.id }} - CentralSOC{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('dashboard.events_list') }}">&larr; Back to events</a>
+<h1>{{ event.event_type }}</h1>
+<p class="page-sub mono">event #{{ event.id }} &middot; {{ event.source_format }} format</p>
+
+<div class="detail-grid">
+  <div class="field"><div class="k">Severity</div><div class="v">{{ m.severity_badge(event.severity) }}</div></div>
+  <div class="field"><div class="k">Timestamp</div><div class="v mono">{{ event.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') if event.timestamp else '—' }}</div></div>
+  <div class="field"><div class="k">Source IP</div><div class="v mono"><a href="{{ url_for('dashboard.events_list', source_ip=event.source_ip) }}">{{ event.source_ip or '—' }}</a></div></div>
+  <div class="field"><div class="k">Destination IP</div><div class="v mono">{{ event.destination_ip or '—' }}</div></div>
+  <div class="field"><div class="k">Source port</div><div class="v mono">{{ event.source_port or '—' }}</div></div>
+  <div class="field"><div class="k">Destination port</div><div class="v mono">{{ event.destination_port or '—' }}</div></div>
+  <div class="field"><div class="k">Protocol</div><div class="v mono">{{ event.protocol or '—' }}</div></div>
+  <div class="field"><div class="k">Username</div><div class="v"><a href="{{ url_for('dashboard.events_list', username=event.username) }}">{{ event.username or '—' }}</a></div></div>
+  <div class="field"><div class="k">Auth status</div><div class="v">{{ event.auth_status or '—' }}</div></div>
+  {% if event.http_method %}
+  <div class="field"><div class="k">HTTP</div><div class="v mono">{{ event.http_method }} {{ event.http_path }} &rarr; {{ event.http_status }}</div></div>
+  <div class="field"><div class="k">User agent</div><div class="v mono">{{ event.user_agent or '—' }}</div></div>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <div class="panel-title"><h2>Raw log line</h2></div>
+  <div class="raw-log">{{ event.raw_log }}</div>
+</div>
+
+{% if iocs %}
+<div class="panel">
+  <div class="panel-title"><h2>IOCs extracted from this event</h2></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Type</th><th>Value</th></tr></thead>
+    <tbody>{% for i in iocs %}<tr><td>{{ i.ioc_type }}</td><td class="mono"><a href="{{ url_for('dashboard.ioc_detail', ioc_type=i.ioc_type, value=i.value) }}">{{ i.value }}</a></td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endif %}
+{% endblock %}

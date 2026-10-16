@@ -1,0 +1,15 @@
+{% extends "auth_base.html" %}
+{% block title %}Set up MFA - CentralSOC{% endblock %}
+{% block content %}
+<h1>Set up two-factor authentication</h1>
+<p class="page-sub mb-tight">Scan this into your authenticator app, then enter the code it shows.</p>
+<p class="hint">No QR renderer in this build yet &mdash; enter this secret manually:</p>
+<p><code>{{ secret }}</code></p>
+<form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <label for="code">Authentication code</label>
+  <input type="text" id="code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6"
+         autocomplete="one-time-code" required autofocus>
+  <button type="submit">Confirm and enable</button>
+</form>
+{% endblock %}

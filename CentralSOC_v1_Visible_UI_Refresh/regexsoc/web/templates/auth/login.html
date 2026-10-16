@@ -1,0 +1,16 @@
+{% extends "auth_base.html" %}
+{% block title %}Sign in - CentralSOC{% endblock %}
+{% block content %}
+<h1>Central<span class="accent-text">SOC</span></h1>
+<p class="page-sub tight-sub">Sign in to the SOC console.</p>
+<form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  {% if next %}<input type="hidden" name="next_redirect" value="{{ next }}">{% endif %}
+  <label for="username">Username</label>
+  <input type="text" id="username" name="username" autocomplete="username" required autofocus>
+  <label for="password">Password</label>
+  <input type="password" id="password" name="password" autocomplete="current-password" required>
+  <button type="submit">Sign in</button>
+</form>
+<p class="hint">Defensive security monitoring only. All access is logged.</p>
+{% endblock %}

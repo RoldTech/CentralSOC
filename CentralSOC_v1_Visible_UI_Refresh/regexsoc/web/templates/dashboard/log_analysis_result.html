@@ -1,0 +1,47 @@
+{% extends "app_base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Analysis: {{ log_file.original_name }} - CentralSOC{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('dashboard.log_analysis_form') }}">&larr; Analyze another file</a>
+<h1>{{ log_file.original_name }}</h1>
+<p class="page-sub mono">sha256 {{ log_file.sha256[:16] }}&hellip; &middot; uploaded by {{ log_file.uploaded_by }} &middot;
+  {{ log_file.uploaded_at.strftime('%Y-%m-%d %H:%M UTC') if log_file.uploaded_at else '' }}</p>
+
+<div class="card-grid">
+  <div class="stat-card"><div class="n">{{ summary.total_events }}</div><div class="label">Total events</div></div>
+  <div class="stat-card"><div class="n">{{ summary.failed_logins }}</div><div class="label">Failed logins</div></div>
+  <div class="stat-card"><div class="n">{{ summary.successful_logins }}</div><div class="label">Successful logins</div></div>
+  <div class="stat-card"><div class="n">{{ summary.http_errors }}</div><div class="label">HTTP errors</div></div>
+  <div class="stat-card sev-high"><div class="n">{{ summary.suspicious_events }}</div><div class="label">Suspicious events</div></div>
+  <div class="stat-card"><div class="n">{{ summary.iocs_extracted }}</div><div class="label">IOCs extracted</div></div>
+</div>
+
+<p class="mb-tight">
+  <a class="btn" href="{{ url_for('dashboard.alerts_list') }}">View alerts</a>
+  <a class="btn" href="{{ url_for('dashboard.iocs_list') }}">View IOCs</a>
+</p>
+
+<div class="panel">
+  <div class="panel-title"><h2>Parsed events</h2></div>
+  {% if events %}
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Severity</th><th scope="col">Type</th><th scope="col">Source IP</th>
+      <th scope="col">Username</th><th scope="col">Time</th></tr></thead>
+    <tbody>
+      {% for e in events %}
+      <tr>
+        <td>{{ m.severity_badge(e.severity) }}</td>
+        <td><a href="{{ url_for('dashboard.event_detail', event_id=e.id) }}">{{ e.event_type }}</a></td>
+        <td class="mono">{{ e.source_ip or '—' }}</td>
+        <td>{{ e.username or '—' }}</td>
+        <td class="mono">{{ e.timestamp.strftime('%Y-%m-%d %H:%M:%S') if e.timestamp else '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {{ m.pagination(page, page_size, total, 'dashboard.log_analysis_result', qargs) }}
+  {% else %}
+  <div class="empty-state">No events were parsed from this file.</div>
+  {% endif %}
+</div>
+{% endblock %}

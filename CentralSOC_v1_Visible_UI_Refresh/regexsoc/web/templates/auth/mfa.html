@@ -1,0 +1,14 @@
+{% extends "auth_base.html" %}
+{% block title %}Verify - CentralSOC{% endblock %}
+{% block content %}
+<h1>Two-factor verification</h1>
+<p class="page-sub tight-sub">Enter the 6-digit code from your authenticator app.</p>
+<form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  {% if next %}<input type="hidden" name="next_redirect" value="{{ next }}">{% endif %}
+  <label for="code">Authentication code</label>
+  <input type="text" id="code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6"
+         autocomplete="one-time-code" required autofocus>
+  <button type="submit">Verify</button>
+</form>
+{% endblock %}

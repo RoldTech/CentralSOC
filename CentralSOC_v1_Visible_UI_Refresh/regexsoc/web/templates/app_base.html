@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block body %}
+<a class="skip-link" href="#main-content">Skip to main content</a>
+<div class="shell">
+  {% include "_sidebar.html" %}
+  <div class="main">
+    {% include "_topbar.html" %}
+    <main class="content" id="main-content" tabindex="-1">
+      {% for message in get_flashed_messages() %}<div class="flash ok" role="status">{{ message }}</div>{% endfor %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% endblock %}

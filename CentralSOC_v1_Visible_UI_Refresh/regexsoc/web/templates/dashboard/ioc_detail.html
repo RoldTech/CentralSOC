@@ -1,0 +1,45 @@
+{% extends "app_base.html" %}
+{% import "macros.html" as m %}
+{% block title %}{{ ioc.value }} - CentralSOC{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('dashboard.iocs_list') }}">&larr; Back to IOCs</a>
+<h1 class="mono">{{ ioc.value }}</h1>
+<p class="page-sub">{{ ioc.ioc_type }} &middot; seen {{ ioc.occurrences }} time{{ 's' if ioc.occurrences != 1 }}</p>
+
+<div class="detail-grid">
+  <div class="field"><div class="k">Type</div><div class="v">{{ ioc.ioc_type }}</div></div>
+  <div class="field"><div class="k">Risk</div><div class="v">{{ m.risk_badge(ioc.risk) }}</div></div>
+  <div class="field"><div class="k">First seen</div><div class="v mono">{{ ioc.first_seen.strftime('%Y-%m-%d %H:%M:%S UTC') if ioc.first_seen else '—' }}</div></div>
+  <div class="field"><div class="k">Last seen</div><div class="v mono">{{ ioc.last_seen.strftime('%Y-%m-%d %H:%M:%S UTC') if ioc.last_seen else '—' }}</div></div>
+  <div class="field"><div class="k">Detection rule</div><div class="v mono">{{ ioc.rule_id or '—' }}</div></div>
+</div>
+
+{% if ioc.context %}
+<div class="panel">
+  <div class="panel-title"><h2>Detection context</h2></div>
+  <div class="raw-log">{{ ioc.context }}</div>
+</div>
+{% endif %}
+
+<div class="panel">
+  <div class="panel-title"><h2>Related alerts</h2></div>
+  {% if ioc.related_alerts %}
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Severity</th><th scope="col">Rule</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      {% for a in ioc.related_alerts %}
+      <tr>
+        <td>{{ m.severity_badge(a.severity) }}</td>
+        <td><a href="{{ url_for('dashboard.alert_detail', alert_pk=a.id) }}">{{ a.rule_name }}</a></td>
+        <td>{{ m.status_pill(a.status) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% elif ioc.ioc_type in ("IPV4", "IPV6") %}
+  <p class="dim">No alerts are currently tied to this address.</p>
+  {% else %}
+  <p class="dim">Related alerts are only linked automatically for IP-address indicators.</p>
+  {% endif %}
+</div>
+{% endblock %}

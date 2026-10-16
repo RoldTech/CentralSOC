@@ -1,0 +1,48 @@
+{% extends "app_base.html" %}
+{% import "macros.html" as m %}
+{% block title %}{{ rule.name }} - CentralSOC{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('dashboard.detections_list') }}">&larr; Back to detections</a>
+<h1>{{ rule.name }}</h1>
+<p class="page-sub mono">{{ rule.id }} &middot; {{ rule.category }}</p>
+
+<div class="detail-grid">
+  <div class="field"><div class="k">Severity</div><div class="v">{{ m.severity_badge(rule.severity) }}</div></div>
+  <div class="field"><div class="k">Risk contribution</div><div class="v">+{{ rule.risk_score }}</div></div>
+  <div class="field"><div class="k">State</div><div class="v">{{ 'Enabled' if rule.enabled else 'Disabled' }}</div></div>
+  <div class="field"><div class="k">Alerts raised</div><div class="v">{{ alerts|length }}{{ ' (most recent shown)' if alerts|length == 100 }}</div></div>
+</div>
+
+<div class="panel">
+  <div class="panel-title"><h2>What this detects</h2></div>
+  <p>{{ rule.description }}</p>
+</div>
+
+<div class="panel">
+  <div class="panel-title"><h2>Why it matters</h2></div>
+  <p>{{ rule.why }}</p>
+</div>
+
+<div class="panel">
+  <div class="panel-title"><h2>Alerts from this rule</h2></div>
+  {% if alerts %}
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Severity</th><th scope="col">Source IP</th><th scope="col">Username</th>
+      <th scope="col">Status</th><th scope="col">Time</th></tr></thead>
+    <tbody>
+      {% for a in alerts %}
+      <tr>
+        <td>{{ m.severity_badge(a.severity) }}</td>
+        <td class="mono"><a href="{{ url_for('dashboard.alert_detail', alert_pk=a.id) }}">{{ a.source_ip or '—' }}</a></td>
+        <td>{{ a.username or '—' }}</td>
+        <td>{{ m.status_pill(a.status) }}</td>
+        <td class="mono">{{ a.timestamp.strftime('%Y-%m-%d %H:%M') if a.timestamp else '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <p class="dim">This rule has matched events (see Matches on the Detections page) but none crossed the alert threshold.</p>
+  {% endif %}
+</div>
+{% endblock %}

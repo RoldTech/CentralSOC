@@ -1,0 +1,20 @@
+{% extends "app_base.html" %}
+{% block title %}Reports - CentralSOC{% endblock %}
+{% block content %}
+<h1>Reports</h1>
+<p class="page-sub">Export the current database contents. Every export is sanitized against spreadsheet formula injection.</p>
+
+{% if datasets %}
+{% for dataset in datasets %}
+<div class="panel">
+  <div class="panel-title"><h2>{{ dataset|capitalize }}</h2></div>
+  <p class="mb-tight">
+    <a class="btn" href="{{ url_for('dashboard.reports_export', dataset=dataset, fmt='csv') }}">Export CSV</a>
+    <a class="btn" href="{{ url_for('dashboard.reports_export', dataset=dataset, fmt='json') }}">Export JSON</a>
+  </p>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty-state">Your role does not have export access to any dataset.</div>
+{% endif %}
+{% endblock %}

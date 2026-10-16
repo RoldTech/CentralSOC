@@ -1,0 +1,61 @@
+{% extends "app_base.html" %}
+{% block title %}Incident #{{ incident.id }} — CentralSOC{% endblock %}
+{% block content %}
+<a href="{{ url_for('incidents.list_incidents') }}">&larr; All incidents</a>
+<div class="workspace-heading"><div><h1>Incident #{{ incident.id }} — {{ incident.title }}</h1><p class="dim">Investigation, evidence, and analyst-controlled response</p></div><a class="btn" href="{{ url_for('incidents.list_incidents') }}">Incident queue</a></div>
+<p class="page-sub"><span class="badge badge-{{ incident.severity|lower }}">{{ incident.severity }}</span> <span class="status-pill status-{{ incident.status|lower|replace(' ', '-') }}">{{ incident.status }}</span> · Owner: {{ incident.owner or 'Unassigned' }}</p>
+<p><a class="btn btn-primary" href="{{ url_for('operations.responses', incident_id=incident.id) }}">Response orchestration</a></p>
+<div class="panel"><h2>Description</h2><p>{{ incident.description or 'No description provided' }}</p>
+{% if incident.resolution %}<h3>Resolution</h3><p>{{ incident.resolution }}</p>{% endif %}</div>
+{% if can_manage_incidents %}
+<section class="panel incident-actions" aria-labelledby="incident-actions-heading">
+  <div class="incident-section-heading"><h2 id="incident-actions-heading">Incident actions</h2><p class="dim">Manage this case and document your investigation.</p></div>
+  <div class="incident-action-grid">
+    <form class="incident-action-card" method="post" action="{{ url_for('incidents.modify', incident_id=incident.id, action='status') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <h3>Update status</h3>
+      <p class="incident-action-hint">Move the case through the incident response lifecycle.</p>
+      <div class="incident-field"><label for="next-status">Next status</label><select name="status" id="next-status">{% for s in transitions %}<option>{{ s }}</option>{% endfor %}</select></div>
+      <div class="incident-field"><label for="resolution">Resolution <span class="dim">(required when resolving or closing)</span></label><textarea id="resolution" name="resolution" maxlength="2000" rows="3" placeholder="Summarize the outcome and supporting evidence..."></textarea></div>
+      <button class="btn btn-primary" type="submit">Update status</button>
+    </form>
+    <form class="incident-action-card" method="post" action="{{ url_for('incidents.modify', incident_id=incident.id, action='assign') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <h3>Assign analyst</h3>
+      <p class="incident-action-hint">Set the owner responsible for this case.</p>
+      <div class="incident-field"><label for="owner">Analyst username</label><input type="text" name="owner" id="owner" maxlength="80" required autocomplete="off" placeholder="Enter analyst username"></div>
+      <button class="btn btn-primary" type="submit">Assign analyst</button>
+    </form>
+    <form class="incident-action-card" method="post" action="{{ url_for('incidents.modify', incident_id=incident.id, action='note') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <h3>Investigation note</h3>
+      <p class="incident-action-hint">Add a timestamped observation to the activity history.</p>
+      <div class="incident-field"><label for="note">Analyst notes</label><textarea name="note" id="note" maxlength="1000" rows="4" required placeholder="Document what you observed, investigated, or verified..."></textarea></div>
+      <button class="btn btn-primary" type="submit">Record note</button>
+    </form>
+    <form class="incident-action-card" method="post" action="{{ url_for('incidents.modify', incident_id=incident.id, action='link') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <h3>Link related alert</h3>
+      <p class="incident-action-hint">Connect supporting evidence to this incident.</p>
+      <div class="incident-field"><label for="alert-id">Alert ID</label><input type="text" name="alert_id" id="alert-id" required placeholder="ALERT-..."></div>
+      <button class="btn btn-primary" type="submit">Link alert</button>
+    </form>
+  </div>
+</section>
+{% endif %}
+<div class="panel incident-playbook"><h2>Response playbook</h2>
+<p>Guided manual checklist only. Completing a step records an analyst acknowledgement; it does not execute containment or recovery actions.</p>
+{% if can_manage_incidents %}<form method="post" action="{{ url_for('incidents.modify', incident_id=incident.id, action='playbook') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}"><label for="playbook">Select playbook</label>
+<select name="playbook" id="playbook">{% for key, option in playbooks.items() %}<option value="{{ key }}" {% if playbook and playbook.key == key %}selected{% endif %}>{{ option.title }}</option>{% endfor %}</select>
+<button class="btn btn-primary" type="submit">Select checklist</button></form>{% endif %}
+{% if playbook %}<h3>{{ playbook.title }}</h3><p><strong>Trigger:</strong> {{ playbook.trigger }}</p>
+<ol>{% for key, guidance in playbook.steps %}<li>{{ guidance }}
+{% if key in completed_steps %}<span class="status-pill status-resolved">Recorded complete</span>
+{% elif can_manage_incidents %}<form method="post" action="{{ url_for('incidents.modify', incident_id=incident.id, action='step') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="step" value="{{ key }}"><button class="btn btn-primary" type="submit">Record completion</button></form>{% endif %}</li>{% endfor %}</ol>
+{% else %}<p>No response playbook selected.</p>{% endif %}</div>
+<div class="panel"><h2>Linked alerts</h2>{% if alerts %}<ul>{% for alert in alerts %}<li><a href="{{ url_for('dashboard.alert_detail', alert_pk=alert.id) }}">{{ alert.alert_id }} — {{ alert.rule_name }}</a></li>{% endfor %}</ul>{% else %}<p>No linked alerts.</p>{% endif %}</div>
+<div class="panel"><h2>Activity</h2>{% if activity %}<ol class="timeline">{% for entry, description in activity %}<li><strong>{{ entry.action.replace("_", " ").title() }}</strong> — {{ entry.username }} ({{ entry.timestamp }})<p>{{ description }}</p></li>{% endfor %}</ol>{% else %}<p>No activity.</p>{% endif %}</div>
+{% if can_upload_logs and email_cases %}<section class="panel"><h2>Related phishing investigations</h2><ul>{% for item in email_cases %}<li><a href="{{ url_for('email_security.case_detail', case_id=item.id) }}">EMAIL-{{ item.id }} — {{ item.subject }}</a> <span class="dim">{{ item.status }} · {{ item.classification }}</span></li>{% endfor %}</ul></section>{% endif %}
+{% endblock %}
