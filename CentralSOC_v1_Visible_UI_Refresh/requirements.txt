@@ -12,3 +12,5 @@ argon2-cffi>=23.1
 pyotp>=2.9
 # Versioned database schema migration tool:
 alembic>=1.13
+# PostgreSQL database driver:
+psycopg[binary]>=3.1,<4

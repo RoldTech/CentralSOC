@@ -13,7 +13,7 @@ NEW_ROLES = "role IN ('ADMIN','ANALYST','VIEWER','SOC_L1','SOC_L2','SOC_L3','SOC
 OLD_ROLES = "role IN ('ADMIN','ANALYST','VIEWER')"
 
 def upgrade():
-    with op.batch_alter_table('users', recreate='always') as batch:
+    with op.batch_alter_table('users', recreate='auto') as batch:
         batch.drop_constraint('ck_user_role', type_='check')
         batch.alter_column('role', existing_type=sa.String(length=10), type_=sa.String(length=20), existing_nullable=False)
         batch.create_check_constraint('ck_user_role', NEW_ROLES)
@@ -23,7 +23,7 @@ def downgrade():
     expanded = bind.execute(sa.text("SELECT COUNT(*) FROM users WHERE role NOT IN ('ADMIN','ANALYST','VIEWER')")).scalar_one()
     if expanded:
         raise RuntimeError('Cannot downgrade: assign legacy roles to tiered SOC users first')
-    with op.batch_alter_table('users', recreate='always') as batch:
+    with op.batch_alter_table('users', recreate='auto') as batch:
         batch.drop_constraint('ck_user_role', type_='check')
         batch.alter_column('role', existing_type=sa.String(length=20), type_=sa.String(length=10), existing_nullable=False)
         batch.create_check_constraint('ck_user_role', OLD_ROLES)

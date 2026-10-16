@@ -1,0 +1,24 @@
+/* CentralSOC button-match-v4. Exact colors sampled from the approved Create incident button.
+   Final color authority, loaded after app.css. Keep sizing and layout in app.css. */
+.btn-primary,
+.content .btn-primary,
+.auth-card button {
+  background: #174951 !important;
+  border: 1px solid #399eaa !important;
+  color: #e4f8fa !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+.btn-primary:hover,
+.content .btn-primary:hover,
+.auth-card button:hover {
+  background: #205d66 !important;
+  border-color: #399eaa !important;
+  color: #e4f8fa !important;
+  filter: none !important;
+}
+.btn-primary:active,
+.content .btn-primary:active,
+.auth-card button:active {
+  background: #123b42 !important;
+}
