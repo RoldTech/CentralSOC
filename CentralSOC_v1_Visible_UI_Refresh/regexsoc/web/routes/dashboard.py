@@ -466,9 +466,17 @@ def settings_page():
 @bp.post("/settings/password")
 @login_required
 def settings_change_password():
+    if g.current_user.username.casefold() == "demo_viewer":
+        return "Security settings are locked for this demo account.", 403
+
     try:
-        change_password(g.db, g.current_user.id, request.form.get("current_password", ""),
-                        request.form.get("new_password", ""), ip_address=request.remote_addr)
+        change_password(
+            g.db,
+            g.current_user.id,
+            request.form.get("current_password", ""),
+            request.form.get("new_password", ""),
+            ip_address=request.remote_addr,
+        )
         flash("Password changed.")
     except InvalidCredentials:
         flash("Current password is incorrect.")
@@ -480,7 +488,15 @@ def settings_change_password():
 @bp.post("/settings/mfa/disable")
 @login_required
 def settings_disable_mfa():
-    disable_mfa(g.db, g.current_user.id, disabled_by=g.current_user.username, ip_address=request.remote_addr)
+    if g.current_user.username.casefold() == "demo_viewer":
+        return "Security settings are locked for this demo account.", 403
+
+    disable_mfa(
+        g.db,
+        g.current_user.id,
+        disabled_by=g.current_user.username,
+        ip_address=request.remote_addr,
+    )
     flash("Two-factor authentication disabled.")
     return redirect(url_for("dashboard.settings_page"))
 

@@ -98,9 +98,15 @@ def mfa_setup_form():
     user = getattr(g, "current_user", None)
     if user is None:
         return redirect(url_for("auth.login_form"))
+    if user.username.casefold() == "demo_viewer":
+        return "Security settings are locked for this demo account.", 403
+
     secret, _uri = begin_mfa_enrollment(g.db, user.id)
-    return render_template("auth/mfa_setup.html", secret=secret,
-                           csrf_token=current_token(session, config.secret_key()))
+    return render_template(
+        "auth/mfa_setup.html",
+        secret=secret,
+        csrf_token=current_token(session, config.secret_key()),
+    )
 
 
 @bp.post("/mfa/setup")
@@ -108,8 +114,16 @@ def mfa_setup_submit():
     user = getattr(g, "current_user", None)
     if user is None:
         return redirect(url_for("auth.login_form"))
+    if user.username.casefold() == "demo_viewer":
+        return "Security settings are locked for this demo account.", 403
+
     try:
-        confirm_mfa_enrollment(g.db, user.id, request.form.get("code") or "", ip_address=_client_ip())
+        confirm_mfa_enrollment(
+            g.db,
+            user.id,
+            request.form.get("code") or "",
+            ip_address=_client_ip(),
+        )
     except InvalidCredentials as exc:
         flash(exc.reason)
         return redirect(url_for("auth.mfa_setup_form"))
